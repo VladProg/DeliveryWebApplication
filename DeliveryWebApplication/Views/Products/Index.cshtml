@@ -1,57 +1,98 @@
-﻿@model IEnumerable<DeliveryWebApplication.Product>
+﻿@model DeliveryWebApplication.Controllers.ProductsController.Filter
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Продукти";
 }
 
-<h1>Index</h1>
+<h1>Продукти</h1>
+
+<hr />
+<h4>Фільтр</h4>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Index">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="TrademarkId" class="control-label"></label>
+                <select asp-for="TrademarkId" class ="form-control" asp-items="ViewBag.TrademarkId"><option/></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CategoryId" class="control-label"></label>
+                <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId"><option/></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CountryId" class="control-label"></label>
+                <select asp-for="CountryId" class ="form-control" asp-items="ViewBag.CountryId"><option/></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShopId" class="control-label"></label>
+                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<hr />
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Створити новий продукт</a>
 </p>
+
+<hr />
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                Назва
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Weight)
+                Вага
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Category)
+                Категорія
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Country)
+                Країна виробництва
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Trademark)
+                Торгова марка
+            </th>
+            <th>
+                Ціна
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.Products) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Weight)
+                @Html.DisplayFor(modelItem => item.WeightOrEmpty)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Category.Id)
+                @Html.DisplayFor(modelItem => item.Category.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Country.Id)
+                @Html.DisplayFor(modelItem => item.Country.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Trademark.Id)
+                @Html.DisplayFor(modelItem => item.Trademark.Name)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @Html.DisplayFor(modelItem => item.Prices)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Детально</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
             </td>
         </tr>
 }

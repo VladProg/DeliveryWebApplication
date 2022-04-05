@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
+using System.ComponentModel.DataAnnotations;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -19,11 +20,50 @@ namespace DeliveryWebApplication.Controllers
             _context = context;
         }
 
+        static IEnumerable<object> SortedSelectList(IEnumerable<object> items, string dataTextField) =>
+            new SelectList(items.OrderBy(item => item.GetType().GetProperty(dataTextField).GetValue(item, null)),
+                           "Id", dataTextField);
+
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var deliveryContext = _context.Products.Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark);
-            return View(await deliveryContext.ToListAsync());
+            IQueryable<Product> deliveryContext = _context.Products.Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark).Include(p => p.ProductsInShops);
+            ViewData["CategoryId"] = SortedSelectList(_context.Categories, "Name");
+            ViewData["CountryId"] = SortedSelectList(_context.Countries, "Name");
+            ViewData["TrademarkId"] = SortedSelectList(_context.Trademarks, "Name");
+            ViewData["ShopId"] = SortedSelectList(_context.Shops, "NameWithAddress");
+
+            return View(new Filter { Products = await deliveryContext.ToListAsync() });
+        }
+
+        public class Filter
+        {
+            public Filter() { }
+            public List<Product> Products;
+            [Display(Name = "Категорія")]
+            public int CategoryId { get; set; }
+            [Display(Name = "Торгова марка")]
+            public int TrademarkId { get; set; }
+            [Display(Name = "Країна")]
+            public int CountryId { get; set; }
+            [Display(Name = "Магазин")]
+            public int ShopId { get; set; }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Index(Filter model)
+        {
+            IQueryable<Product> deliveryContext = _context.Products.Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark).Include(p => p.ProductsInShops);
+            if (model.TrademarkId != 0) deliveryContext = deliveryContext.Where(p => p.TrademarkId == model.TrademarkId);
+            if (model.CategoryId != 0) deliveryContext = deliveryContext.Where(p => p.CategoryId == model.CategoryId);
+            if (model.CountryId != 0) deliveryContext = deliveryContext.Where(p => p.CountryId == model.CountryId);
+            if (model.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ProductsInShops.Any(pis => pis.ShopId == model.ShopId));
+            ViewData["CategoryId"] = SortedSelectList(_context.Categories, "Name");
+            ViewData["CountryId"] = SortedSelectList(_context.Countries, "Name");
+            ViewData["TrademarkId"] = SortedSelectList(_context.Trademarks, "Name");
+            ViewData["ShopId"] = SortedSelectList(_context.Shops, "NameWithAddress");
+            return View(new Filter { Products = await deliveryContext.ToListAsync() });
         }
 
         // GET: Products/Details/5
@@ -50,9 +90,9 @@ namespace DeliveryWebApplication.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id");
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks, "Id", "Id");
+            ViewData["CategoryId"] = SortedSelectList(_context.Categories, "Name");
+            ViewData["CountryId"] = SortedSelectList(_context.Countries, "Name");
+            ViewData["TrademarkId"] = SortedSelectList(_context.Trademarks, "Name");
             return View();
         }
 
@@ -69,9 +109,9 @@ namespace DeliveryWebApplication.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", product.CategoryId);
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id", product.CountryId);
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks, "Id", "Id", product.TrademarkId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name", product.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks, "Id", "Name", product.TrademarkId);
             return View(product);
         }
 
@@ -88,9 +128,9 @@ namespace DeliveryWebApplication.Controllers
             {
                 return NotFound();
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", product.CategoryId);
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Id", product.CountryId);
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks, "Id", "Id", product.TrademarkId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", product.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name", product.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks, "Id", "Name", product.TrademarkId);
             return View(product);
         }
 

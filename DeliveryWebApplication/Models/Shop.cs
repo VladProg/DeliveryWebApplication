@@ -19,5 +19,7 @@ namespace DeliveryWebApplication
 
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<ProductInShop> ProductsInShops { get; set; }
+
+        public string NameWithAddress => Name + " (" + Address + ") ";
     }
 }
