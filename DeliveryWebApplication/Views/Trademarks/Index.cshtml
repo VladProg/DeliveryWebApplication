@@ -1,33 +1,37 @@
 ﻿@model IEnumerable<DeliveryWebApplication.Trademark>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Торгові марки";
 }
 
-<h1>Index</h1>
+<h1>Торгові марки</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Створити торгову марку</a> |
+    <a asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
 </p>
 <table class="table">
     <thead>
         <tr>
-            <th>
+            <th width="30%">
                 @Html.DisplayNameFor(model => model.Name)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.OrderBy(item=>item.Name)) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
+                @if(!item.Products.Any())
+                {
+                    <text> | </text>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                }
             </td>
         </tr>
 }

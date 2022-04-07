@@ -25,6 +25,11 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> Index()
         {
             IQueryable<Product> deliveryContext = _context.Products.Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark).Include(p => p.ProductsInShops);
+            if (await _context.Trademarks.FirstOrDefaultAsync(t => t.Id == Filter.TrademarkId) is null) Filter.TrademarkId = 0;
+            if (await _context.Categories.FirstOrDefaultAsync(t => t.Id == Filter.CategoryId) is null) Filter.CategoryId = 0;
+            if (await _context.Countries.FirstOrDefaultAsync(t => t.Id == Filter.CountryId) is null) Filter.CountryId = 0;
+            if (await _context.Shops.FirstOrDefaultAsync(t => t.Id == Filter.ShopId) is null) Filter.ShopId = 0;
+            Filter = Filter;
             if (Filter.TrademarkId != 0) deliveryContext = deliveryContext.Where(p => p.TrademarkId == Filter.TrademarkId);
             if (Filter.CategoryId != 0) deliveryContext = deliveryContext.Where(p => p.CategoryId == Filter.CategoryId);
             if (Filter.CountryId != 0) deliveryContext = deliveryContext.Where(p => p.CountryId == Filter.CountryId);
@@ -51,7 +56,33 @@ namespace DeliveryWebApplication.Controllers
             public int ShopId { get; set; } = 0;
         }
 
-        public static FilterClass Filter=new();
+        private FilterClass _filter = null;
+
+        public FilterClass Filter
+        {
+            get
+            {
+                if (_filter is null)
+                {
+                    _filter = new();
+                    _filter.CategoryId = TempData["CategoryId"] is int CategoryId ? CategoryId : 0;
+                    _filter.TrademarkId = TempData["TrademarkId"] is int TrademarkId ? TrademarkId : 0;
+                    _filter.CountryId = TempData["CountryId"] is int CountryId ? CountryId : 0;
+                    _filter.ShopId = TempData["CategoryId"] is int ShopId ? ShopId : 0;
+                }
+                TempData.Keep();
+                return _filter;
+            }
+            set
+            {
+                _filter = value;
+                TempData["CategoryId"] = _filter.CategoryId;
+                TempData["TrademarkId"] = _filter.TrademarkId;
+                TempData["CountryId"] = _filter.CountryId;
+                TempData["ShopId"] = _filter.ShopId;
+                TempData.Keep();
+            }
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -13,6 +13,7 @@ namespace DeliveryWebApplication
 
         public int Id { get; set; }
         [Display(Name = "Назва")]
+        [MaxLength(50, ErrorMessage = "Торгова марка не може бути довша, ніж 50 символів")]
         [Required(ErrorMessage = "Введіть назву")]
         public string Name { get; set; } = null!;
 

@@ -16,6 +16,7 @@ namespace DeliveryWebApplication
         public int Id { get; set; }
         [Display(Name = "Назва")]
         [Required(ErrorMessage = "Введіть назву")]
+        [MaxLength(100, ErrorMessage = "Назва не може бути довша, ніж 100 символів")]
         public string Name { get; set; } = null!;
         [Display(Name = "Вага")]
         [Range(1, int.MaxValue, ErrorMessage = "Вага повинна бути або відсутня, або додатна")]

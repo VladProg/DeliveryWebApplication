@@ -47,20 +47,11 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
+            <th width="30%">
                 @Html.DisplayNameFor(model => model.Products.First().Name)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Products.First().Weight)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Products.First().Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Products.First().Country)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Products.First().Trademark)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Products.First().Prices)
@@ -68,22 +59,13 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Products) {
+@foreach (var item in Model.Products.OrderBy(item=>item.Name)) {
         <tr>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id" style="text-decoration:none"> @Html.DisplayFor(modelItem => item.Name) </a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WeightOrEmpty)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Country.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Trademark.Name)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item[Model.ShopId])

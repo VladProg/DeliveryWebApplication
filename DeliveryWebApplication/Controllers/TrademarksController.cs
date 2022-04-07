@@ -22,7 +22,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Trademarks
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Trademarks.ToListAsync());
+            return View(await _context.Trademarks.Include(t => t.Products).ToListAsync());
         }
 
         // GET: Trademarks/Details/5
@@ -126,6 +126,7 @@ namespace DeliveryWebApplication.Controllers
 
             var trademark = await _context.Trademarks
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (trademark == null)
             {
                 return NotFound();
