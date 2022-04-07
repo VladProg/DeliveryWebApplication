@@ -1,6 +1,8 @@
-﻿using System;
+﻿using DeliveryWebApplication.Controllers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 
 namespace DeliveryWebApplication
 {
@@ -28,27 +30,59 @@ namespace DeliveryWebApplication
         [Required(ErrorMessage = "Оберіть країну виробництва")]
         public int CountryId { get; set; }
 
+        [Display(Name = "Категорія")]
         public virtual Category Category { get; set; } = null!;
+        [Display(Name = "Країна виробництва")]
         public virtual Country Country { get; set; } = null!;
-        public virtual Trademark Trademark { get; set; }
+        [Display(Name = "Торгова марка")]
+        public virtual Trademark Trademark { get; set; } = null!;
         public virtual ICollection<ProductInShop> ProductsInShops { get; set; }
 
-        public string WeightOrEmpty => Weight is null ? "" :
+        [Display(Name = "Вага")]
+        public string WeightOrEmpty => Weight is null ? "—" :
                                                         Weight < 1000 ? Weight.ToString() + " г" :
                                                                         (Weight / 1000.0)?.ToString("0.###") + " кг";
+
+        [Display(Name = "Ціна")]
+        public string this[int shopId]
+        {
+            get
+            {
+                IEnumerable<ProductInShop> productsInShops = ProductsInShops;
+                if (shopId != 0)
+                    productsInShops = productsInShops.Where(pis => pis.ShopId == shopId);
+                if (!ProductsInShops.Any())
+                    return "—";
+                var min = productsInShops.Min(pis => pis.Price);
+                var max = productsInShops.Max(pis => pis.Price);
+                if (Weight is null)
+                    if (min == max)
+                        return (max * 1000).ToString("0.00") + " ₴/кг";
+                    else
+                        return (min * 1000).ToString("0.00") + " — " + (max * 1000).ToString("0.00") + " ₴/кг";
+                else
+                    if (min == max)
+                        return max.ToString("0.00") + " ₴";
+                    else
+                        return min.ToString("0.00") + " — " + max.ToString("0.00") + " ₴";
+            }
+        }
+
+        [Display(Name = "Ціна")]
         public string Prices
         {
             get
             {
+                IEnumerable<ProductInShop> productsInShops = ProductsInShops;
                 if (!ProductsInShops.Any())
                     return "—";
-                var min = ProductsInShops.Min(pis => pis.Price);
-                var max = ProductsInShops.Max(pis => pis.Price);
+                var min = productsInShops.Min(pis => pis.Price);
+                var max = productsInShops.Max(pis => pis.Price);
                 if (Weight is null)
                     if (min == max)
-                        return (max*1000).ToString("0.00") + " ₴/кг";
+                        return (max * 1000).ToString("0.00") + " ₴/кг";
                     else
-                        return (min*1000).ToString("0.00") + " — " + (max * 1000).ToString("0.00") + " ₴/кг";
+                        return (min * 1000).ToString("0.00") + " — " + (max * 1000).ToString("0.00") + " ₴/кг";
                 else
                     if (min == max)
                         return max.ToString("0.00") + " ₴";

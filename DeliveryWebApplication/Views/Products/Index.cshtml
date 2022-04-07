@@ -1,4 +1,4 @@
-﻿@model DeliveryWebApplication.Controllers.ProductsController.Filter
+﻿@model DeliveryWebApplication.Controllers.ProductsController.FilterClass
 
 @{
     ViewData["Title"] = "Продукти";
@@ -13,19 +13,19 @@
         <form asp-action="Index">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="TrademarkId" class="control-label"></label>
+                <label asp-for="TrademarkId" class="control-label"></label> (<a asp-action="Index" asp-controller="Trademarks">відкрити список</a>)
                 <select asp-for="TrademarkId" class ="form-control" asp-items="ViewBag.TrademarkId"><option/></select>
             </div>
             <div class="form-group">
-                <label asp-for="CategoryId" class="control-label"></label>
+                <label asp-for="CategoryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Categories">відкрити список</a>)
                 <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId"><option/></select>
             </div>
             <div class="form-group">
-                <label asp-for="CountryId" class="control-label"></label>
+                <label asp-for="CountryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Countries">відкрити список</a>)
                 <select asp-for="CountryId" class ="form-control" asp-items="ViewBag.CountryId"><option/></select>
             </div>
             <div class="form-group">
-                <label asp-for="ShopId" class="control-label"></label>
+                <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops">відкрити список</a>)
                 <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
             </div>
             <div class="form-group">
@@ -48,31 +48,30 @@
     <thead>
         <tr>
             <th>
-                Назва
+                @Html.DisplayNameFor(model => model.Products.First().Name)
             </th>
             <th>
-                Вага
+                @Html.DisplayNameFor(model => model.Products.First().Weight)
             </th>
             <th>
-                Категорія
+                @Html.DisplayNameFor(model => model.Products.First().Category)
             </th>
             <th>
-                Країна виробництва
+                @Html.DisplayNameFor(model => model.Products.First().Country)
             </th>
             <th>
-                Торгова марка
+                @Html.DisplayNameFor(model => model.Products.First().Trademark)
             </th>
             <th>
-                Ціна
+                @Html.DisplayNameFor(model => model.Products.First().Prices)
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model.Products) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                <a asp-action="Details" asp-route-id="@item.Id" style="text-decoration:none"> @Html.DisplayFor(modelItem => item.Name) </a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.WeightOrEmpty)
@@ -87,12 +86,7 @@
                 @Html.DisplayFor(modelItem => item.Trademark.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Prices)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Детально</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                @Html.DisplayFor(modelItem => item[Model.ShopId])
             </td>
         </tr>
 }
