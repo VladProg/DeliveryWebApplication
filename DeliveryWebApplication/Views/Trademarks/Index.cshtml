@@ -10,11 +10,17 @@
     <a asp-action="Create">Створити торгову марку</a> |
     <a asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
 </p>
+*Щоб видалити торгову марку, спочатку видаліть всі продукти з неї.
+<br />
+<br />
 <table class="table">
     <thead>
         <tr>
             <th width="30%">
                 @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th width="20%">
+                Кількість продуктів
             </th>
             <th></th>
         </tr>
@@ -24,6 +30,9 @@
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Products.Count)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>

@@ -12,7 +12,11 @@ namespace DeliveryWebApplication
         }
 
         public int Id { get; set; }
+        [Display(Name = "Назва")]
+        [MaxLength(50, ErrorMessage = "Назва країни не може бути довша, ніж 50 символів")]
+        [Required(ErrorMessage = "Введіть назву країни")]
         public string Name { get; set; } = null!;
+        public bool Deleted { get; set; } = false;
 
         public virtual ICollection<Product> Products { get; set; }
     }

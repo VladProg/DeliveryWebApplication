@@ -17,6 +17,7 @@ namespace DeliveryWebApplication
         [Display(Name = "Ціна")]
         [Required(ErrorMessage = "Введіть ціну")]
         public decimal Price { get; set; }
+        public bool Deleted { get; set; } = false;
 
         public virtual Product Product { get; set; } = null!;
         public virtual Shop Shop { get; set; } = null!;

@@ -1,13 +1,11 @@
 ﻿@model DeliveryWebApplication.Shop
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Редагувати магазин";
 }
 
-<h1>Edit</h1>
-
-<h4>Shop</h4>
-<hr />
+<h4>Редагувати магазин</h4>
+<br />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
@@ -33,15 +31,16 @@
                 <input asp-for="Site" class="form-control" />
                 <span asp-validation-for="Site" class="text-danger"></span>
             </div>
+            <br />
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+                <input type="submit" value="Зберегти" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
-
+<br />
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">Повернутися до списку магазинів</a>
 </div>
 
 @section Scripts {

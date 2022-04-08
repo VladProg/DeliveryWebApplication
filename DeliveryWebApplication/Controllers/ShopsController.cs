@@ -22,7 +22,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Shops
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Shops.ToListAsync());
+            return View(await _context.Shops.Include(s => s.ProductsInShops).ToListAsync());
         }
 
         // GET: Shops/Details/5

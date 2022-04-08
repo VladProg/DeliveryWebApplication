@@ -13,9 +13,13 @@ namespace DeliveryWebApplication
 
         public int Id { get; set; }
         [Display(Name = "Назва")]
-        [Required(ErrorMessage = "Введіть назву")]
+        [MaxLength(50, ErrorMessage = "Назва категорії не може бути довша, ніж 50 символів")]
+        [Required(ErrorMessage = "Введіть назву категорії")]
         public string Name { get; set; } = null!;
+        public bool Deleted { get; set; } = false;
 
         public virtual ICollection<Product> Products { get; set; }
+
+        public int Count => Products.Count;
     }
 }

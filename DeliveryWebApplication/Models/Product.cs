@@ -30,6 +30,7 @@ namespace DeliveryWebApplication
         [Display(Name = "Країна виробництва")]
         [Required(ErrorMessage = "Оберіть країну виробництва")]
         public int CountryId { get; set; }
+        public bool Deleted { get; set; } = false;
 
         [Display(Name = "Категорія")]
         public virtual Category Category { get; set; } = null!;

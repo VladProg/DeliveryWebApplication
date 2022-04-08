@@ -1,33 +1,46 @@
 ﻿@model IEnumerable<DeliveryWebApplication.Country>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Країни";
 }
 
-<h1>Index</h1>
+<h1>Країни</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Створити країну</a> |
+    <a asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
 </p>
+*Щоб видалити країну, спочатку видаліть всі продукти з неї.
+<br />
+<br />
 <table class="table">
     <thead>
         <tr>
-            <th>
+            <th width="30%">
                 @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th width="20%">
+                Кількість продуктів
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.OrderBy(item=>item.Name)) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @Html.DisplayFor(modelItem => item.Products.Count)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
+                @if(!item.Products.Any())
+                {
+                    <text> | </text>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                }
             </td>
         </tr>
 }

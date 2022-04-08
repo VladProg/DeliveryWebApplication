@@ -22,7 +22,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Countries
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Countries.ToListAsync());
+            return View(await _context.Countries.Include(t => t.Products).ToListAsync());
         }
 
         // GET: Countries/Details/5
