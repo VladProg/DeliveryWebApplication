@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -18,6 +19,7 @@ namespace DeliveryWebApplication.Controllers
         public OrdersController(DeliveryContext context)
         {
             _context = context;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: Orders
@@ -51,9 +53,9 @@ namespace DeliveryWebApplication.Controllers
         // GET: Orders/Create
         public IActionResult Create()
         {
-            ViewData["CourierId"] = new SelectList(_context.Couriers, "Id", "Id");
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Id");
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Id");
+            ViewData["CourierId"] = new SelectList(_context.Couriers, "Id", "Name");
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Name");
+            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Name");
             return View();
         }
 
@@ -70,9 +72,9 @@ namespace DeliveryWebApplication.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CourierId"] = new SelectList(_context.Couriers, "Id", "Id", order.CourierId);
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Id", order.CustomerId);
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Id", order.ShopId);
+            ViewData["CourierId"] = new SelectList(_context.Couriers, "Id", "Name", order.CourierId);
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Name", order.CustomerId);
+            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Name", order.ShopId);
             return View(order);
         }
 

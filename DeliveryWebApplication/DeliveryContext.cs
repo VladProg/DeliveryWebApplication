@@ -5,6 +5,30 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace DeliveryWebApplication
 {
+    public class Deletable
+    {
+        public bool Deleted { get; set; } = false;
+    }
+
+    public static class DeletableExtensions
+    {
+        public static IQueryable<T> Alive<T>(this IQueryable<T> seq) where T : Deletable => seq.Where(x => !x.Deleted);
+        public static IEnumerable<T> Alive<T>(this IEnumerable<T> seq) where T : Deletable => seq.Where(x => !x.Deleted);
+
+        public static async ValueTask<T?> AliveFindAsync<T>(this DbSet<T> seq, int? id) where T : Deletable
+        {
+            var res = await seq.FindAsync(id);
+            if (res is null || res.Deleted)
+                return null;
+            else
+                return res;
+        }
+
+        //public static bool HasAlive<T>(this IEnumerable<T> seq) where T : Deletable => seq.Any(x => !x.Deleted);
+        //public static IQueryable<T> HasAlive<T,U>(this IQueryable<T> seq, Func<T, IEnumerable<U>> func) where U : Deletable =>
+        //    seq.Where(x => func(x).Any(y=>!y.Deleted));
+    }
+
     public partial class DeliveryContext : DbContext
     {
         public DeliveryContext()
@@ -121,6 +145,8 @@ namespace DeliveryWebApplication
                     .WithMany(p => p.Products)
                     .HasForeignKey(d => d.TrademarkId)
                     .HasConstraintName("FK_Products_Trademarks");
+
+                entity.Property(d => d.Weight).HasPrecision(8, 3);
             });
 
             modelBuilder.Entity<ProductInShop>(entity =>

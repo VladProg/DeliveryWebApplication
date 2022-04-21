@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DeliveryWebApplication
 {
-    public partial class Trademark
+    public partial class Trademark : Deletable
     {
         public Trademark()
         {
@@ -16,8 +16,11 @@ namespace DeliveryWebApplication
         [MaxLength(50, ErrorMessage = "Назва торгової марки не може бути довша, ніж 50 символів")]
         [Required(ErrorMessage = "Введіть назву торгової марки")]
         public string Name { get; set; } = null!;
-        public bool Deleted { get; set; } = false;
 
         public virtual ICollection<Product> Products { get; set; }
+
+        public bool HasAlive => Products.Alive().Any();
+        [Display(Name = "Кількість продуктів")]
+        public int CountAlive => Products.Alive().Count();
     }
 }

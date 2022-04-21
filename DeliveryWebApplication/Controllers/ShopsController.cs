@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -17,30 +18,13 @@ namespace DeliveryWebApplication.Controllers
         public ShopsController(DeliveryContext context)
         {
             _context = context;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: Shops
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Shops.Include(s => s.ProductsInShops).ToListAsync());
-        }
-
-        // GET: Shops/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var shop = await _context.Shops
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (shop == null)
-            {
-                return NotFound();
-            }
-
-            return View(shop);
+            return View(await _context.Shops.Alive().Include(s => s.ProductsInShops).ToListAsync());
         }
 
         // GET: Shops/Create
@@ -56,6 +40,8 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Address,Phone,Site")] Shop shop)
         {
+            if (_context.Shops.Alive().Any(s => s.Name == shop.Name && s.Address == shop.Address))
+                ModelState.AddModelError("", "Такий магазин вже існує");
             if (ModelState.IsValid)
             {
                 _context.Add(shop);
@@ -73,7 +59,7 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var shop = await _context.Shops.FindAsync(id);
+            var shop = await _context.Shops.AliveFindAsync(id);
             if (shop == null)
             {
                 return NotFound();
@@ -93,6 +79,8 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
+            if (_context.Shops.Alive().Any(s => s.Name == shop.Name && s.Address == shop.Address && s.Id != shop.Id))
+                ModelState.AddModelError("", "Такий магазин вже існує");
             if (ModelState.IsValid)
             {
                 try
@@ -124,9 +112,10 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var shop = await _context.Shops
+            var shop = await _context.Shops.Alive()
+                .Include(t => t.ProductsInShops)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (shop == null)
+            if (shop == null || shop.HasAlive)
             {
                 return NotFound();
             }
@@ -140,7 +129,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var shop = await _context.Shops.FindAsync(id);
-            _context.Shops.Remove(shop);
+            shop.Deleted = true;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

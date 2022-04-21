@@ -1,6 +1,7 @@
 ﻿using DeliveryWebApplication.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -11,6 +12,7 @@ namespace DeliveryWebApplication.Controllers
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         public IActionResult Index()

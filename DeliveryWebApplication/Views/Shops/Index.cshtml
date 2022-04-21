@@ -29,7 +29,7 @@
                 @Html.DisplayNameFor(model => model.Site)
             </th>
             <th>
-                Кількість продуктів
+                @Html.DisplayNameFor(model => model.CountAlive)
             </th>
             <th></th>
         </tr>
@@ -50,11 +50,11 @@
                 @Html.DisplayFor(modelItem => item.Site)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ProductsInShops.Count)
+                @Html.DisplayFor(modelItem => item.CountAlive)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
-                @if(!item.ProductsInShops.Any())
+                @if(!item.HasAlive)
                 {
                     <text> | </text>
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -17,30 +18,13 @@ namespace DeliveryWebApplication.Controllers
         public CountriesController(DeliveryContext context)
         {
             _context = context;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: Countries
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Countries.Include(t => t.Products).ToListAsync());
-        }
-
-        // GET: Countries/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var country = await _context.Countries
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (country == null)
-            {
-                return NotFound();
-            }
-
-            return View(country);
+            return View(await _context.Countries.Alive().Include(t => t.Products).ToListAsync());
         }
 
         // GET: Countries/Create
@@ -56,6 +40,8 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Country country)
         {
+            if (_context.Countries.Alive().Any(c => c.Name == country.Name))
+                ModelState.AddModelError("Name", "Така країна вже існує");
             if (ModelState.IsValid)
             {
                 _context.Add(country);
@@ -73,7 +59,7 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var country = await _context.Countries.FindAsync(id);
+            var country = await _context.Countries.AliveFindAsync(id);
             if (country == null)
             {
                 return NotFound();
@@ -88,11 +74,13 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Country country)
         {
-            if (id != country.Id)
+            if (id != country.Id || country.Deleted)
             {
                 return NotFound();
             }
 
+            if (_context.Countries.Alive().Any(c => c.Name == country.Name && c.Id != country.Id))
+                ModelState.AddModelError("Name", "Така країна вже існує");
             if (ModelState.IsValid)
             {
                 try
@@ -124,9 +112,10 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var country = await _context.Countries
+            var country = await _context.Countries.Alive()
+                .Include(t => t.Products)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (country == null)
+            if (country == null || country.HasAlive)
             {
                 return NotFound();
             }
@@ -140,7 +129,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var country = await _context.Countries.FindAsync(id);
-            _context.Countries.Remove(country);
+            country.Deleted = true;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

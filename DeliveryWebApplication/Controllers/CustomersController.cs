@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -17,6 +18,7 @@ namespace DeliveryWebApplication.Controllers
         public CustomersController(DeliveryContext context)
         {
             _context = context;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: Customers

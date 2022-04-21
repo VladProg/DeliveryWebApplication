@@ -12,5 +12,7 @@ namespace DeliveryWebApplication
 
         public virtual Order Order { get; set; } = null!;
         public virtual ProductInShop ProductInShop { get; set; } = null!;
+
+        public decimal Cost => ProductInShop.Price * Count / (ProductInShop.Product.Weight is null ? 1000 : 1);
     }
 }

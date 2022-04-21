@@ -23,6 +23,12 @@
             @Html.DisplayFor(model => model.WeightOrEmpty)
         </dd>
         <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Trademark)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Trademark.Name)
+        </dd>
+        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Category)
         </dt>
         <dd class = "col-sm-10">
@@ -33,12 +39,6 @@
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Country.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Trademark)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Trademark.Name)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Prices)
@@ -53,10 +53,18 @@
 
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Редагувати</a> |
-    <a asp-action="Delete" asp-route-id="@Model?.Id">Видалити</a> |
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Додати в магазин</a> |
+    @if(!Model.HasAlive)
+    {
+        <a asp-action="Delete" asp-route-id="@Model?.Id">Видалити</a> <text> | </text>
+    }
+    <a asp-action="Create" asp-controller="ProductsInShops" asp-route-productId="@Model?.Id" asp-route-productName="@Model?.Name" asp-route-isPerKg="@(Model.Weight is null)">Додати в магазин</a> |
     <a asp-action="Index">Повернутися до списку продуктів</a>
 </div>
+
+@if(Model.HasAlive)
+{
+    <text> Щоб видалити продукт, спочатку видаліть його з усіх магазинів. </text>
+}
 
 <hr />
 
@@ -72,13 +80,13 @@
                 @Html.DisplayNameFor(model => model.ProductsInShops.FirstOrDefault().Shop.Address)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ProductsInShops.FirstOrDefault().Price)
+                @Html.DisplayNameFor(model => model.ProductsInShops.FirstOrDefault().FormattedPrice)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.ProductsInShops) {
+@foreach (var item in Model.ProductsInShops.Alive()) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Shop.Name)
@@ -87,12 +95,11 @@
                 @Html.DisplayFor(modelItem => item.Shop.Address)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Price)
+                @Html.DisplayFor(modelItem => item.FormattedPrice)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-controller="ProductsInShops" asp-route-id="@item.Id">Змінити ціну</a> |
+                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазина</a>
             </td>
         </tr>
 }

@@ -1,39 +1,40 @@
 ﻿@model DeliveryWebApplication.ProductInShop
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Додати продукт в магазин";
 }
 
-<h1>Create</h1>
-
-<h4>ProductInShop</h4>
-<hr />
+<h4>Додати продукт "<b>@ViewData["ProductName"]</b>" в магазин.</h4>
+<br />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="ProductId" class="control-label"></label>
-                <select asp-for="ProductId" class ="form-control" asp-items="ViewBag.ProductId"></select>
-            </div>
+            <input type="hidden" name="ProductId" value="@ViewData["ProductId"]" />
             <div class="form-group">
                 <label asp-for="ShopId" class="control-label"></label>
-                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"></select>
+                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+                <span asp-validation-for="ShopId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
+                <label asp-for="Price" class="control-label"></label> в гривнях
+                @if((bool)(ViewData["IsPerKg"]))
+                {
+                    <text>за кілограм</text>
+                }
+                <input asp-for="Price" onkeypress="return /[0-9\.]/i.test(event.key)" class="form-control" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
+            <br />
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Додати" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
-
+<br />
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Details" asp-controller="Products" asp-route-id="@ViewData["ProductId"]">Повернутися до продукта</a>
 </div>
 
 @section Scripts {

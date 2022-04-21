@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -19,25 +20,30 @@ namespace DeliveryWebApplication.Controllers
         public ProductsController(DeliveryContext context)
         {
             _context = context;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            IQueryable<Product> deliveryContext = _context.Products.Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark).Include(p => p.ProductsInShops);
-            if (await _context.Trademarks.FirstOrDefaultAsync(t => t.Id == Filter.TrademarkId) is null) Filter.TrademarkId = 0;
-            if (await _context.Categories.FirstOrDefaultAsync(t => t.Id == Filter.CategoryId) is null) Filter.CategoryId = 0;
-            if (await _context.Countries.FirstOrDefaultAsync(t => t.Id == Filter.CountryId) is null) Filter.CountryId = 0;
-            if (await _context.Shops.FirstOrDefaultAsync(t => t.Id == Filter.ShopId) is null) Filter.ShopId = 0;
+            IQueryable<Product> deliveryContext = _context.Products.Alive().Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark).Include(p => p.ProductsInShops);
+            var trademark = await _context.Trademarks.Alive().Include(t=>t.Products).FirstOrDefaultAsync(t => t.Id == Filter.TrademarkId);
+            var category = await _context.Categories.Alive().Include(t=>t.Products).FirstOrDefaultAsync(t => t.Id == Filter.CategoryId);
+            var country = await _context.Countries.Alive().Include(t=>t.Products).FirstOrDefaultAsync(t => t.Id == Filter.CountryId);
+            var shop = await _context.Shops.Alive().Include(t=>t.ProductsInShops).FirstOrDefaultAsync(t => t.Id == Filter.ShopId);
+            if (trademark is null || !trademark.HasAlive) Filter.TrademarkId = 0;
+            if (category is null || !category.HasAlive) Filter.CategoryId = 0;
+            if (country is null || !country.HasAlive) Filter.CountryId = 0;
+            if (shop is null || !shop.HasAlive) Filter.ShopId = 0;
             Filter = Filter;
             if (Filter.TrademarkId != 0) deliveryContext = deliveryContext.Where(p => p.TrademarkId == Filter.TrademarkId);
             if (Filter.CategoryId != 0) deliveryContext = deliveryContext.Where(p => p.CategoryId == Filter.CategoryId);
             if (Filter.CountryId != 0) deliveryContext = deliveryContext.Where(p => p.CountryId == Filter.CountryId);
-            if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ProductsInShops.Any(pis => pis.ShopId == Filter.ShopId));
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["ShopId"] = new SelectList(_context.Shops.OrderBy(x => x.Name + " " + x.Address), "Id", "NameWithAddress");
+            if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ProductsInShops.Any(pis => pis.ShopId == Filter.ShopId && !pis.Deleted));
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().Where(x => x.Products.Any(y => !y.Deleted)).OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().Where(x => x.Products.Any(y => !y.Deleted)).OrderBy(x => x.Name), "Id", "Name");
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().Where(x => x.Products.Any(y => !y.Deleted)).OrderBy(x => x.Name), "Id", "Name");
+            ViewData["ShopId"] = new SelectList(_context.Shops.Alive().Where(x => x.ProductsInShops.Any(y => !y.Deleted)).OrderBy(x => x.Name + " " + x.Address), "Id", "NameWithAddress");
             Filter.Products = await deliveryContext.ToListAsync();
             return View(Filter);
         }
@@ -68,7 +74,7 @@ namespace DeliveryWebApplication.Controllers
                     _filter.CategoryId = TempData["CategoryId"] is int CategoryId ? CategoryId : 0;
                     _filter.TrademarkId = TempData["TrademarkId"] is int TrademarkId ? TrademarkId : 0;
                     _filter.CountryId = TempData["CountryId"] is int CountryId ? CountryId : 0;
-                    _filter.ShopId = TempData["CategoryId"] is int ShopId ? ShopId : 0;
+                    _filter.ShopId = TempData["ShopId"] is int ShopId ? ShopId : 0;
                 }
                 TempData.Keep();
                 return _filter;
@@ -100,7 +106,7 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products
+            var product = await _context.Products.Alive()
                 .Include(p => p.Category)
                 .Include(p => p.Country)
                 .Include(p => p.Trademark)
@@ -126,9 +132,9 @@ namespace DeliveryWebApplication.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
             return View();
         }
 
@@ -139,15 +145,22 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateInfo info)
         {
+            if (ModelState.IsValid &&
+                _context.Products.Alive().Any(p => p.Name == info.Product.Name &&
+                                                   p.Weight == info.Product.Weight &&
+                                                   p.TrademarkId == info.Product.TrademarkId &&
+                                                   p.CategoryId == info.Product.CategoryId &&
+                                                   p.CountryId == info.Product.CountryId))
+                ModelState.AddModelError("", "Такий продукт вже існує");
             if (ModelState.IsValid)
             {
                 _context.Add(info.Product);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = info.Product.Id });
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
             return View(info);
         }
 
@@ -155,18 +168,20 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateTrademark(CreateInfo info)
         {
+            if (_context.Trademarks.Alive().Any(t => t.Name == info.Trademark.Name))
+                ModelState.AddModelError("Trademark.Name", "Така торгова марка вже існує");
             if (ModelState.IsValid)
             {
                 var entity = _context.Add(info.Trademark).Entity;
                 await _context.SaveChangesAsync();
-                ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
-                ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
-                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name", entity.Id);
+                ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
+                ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
+                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", entity.Id);
                 return View(nameof(Create), info);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
             return View(nameof(Create), info);
         }
 
@@ -174,18 +189,20 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCategory(CreateInfo info)
         {
+            if (_context.Categories.Alive().Any(c => c.Name == info.Category.Name))
+                ModelState.AddModelError("Category.Name", "Така категорія вже існує");
             if (ModelState.IsValid)
             {
                 var entity = _context.Add(info.Category).Entity;
                 await _context.SaveChangesAsync();
-                ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", entity.Id);
-                ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
-                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
+                ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", entity.Id);
+                ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
+                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
                 return View(nameof(Create), info);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
             return View(nameof(Create), info);
         }
 
@@ -197,14 +214,14 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products.AliveFindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", product.CategoryId);
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name", product.CountryId);
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name", product.TrademarkId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", product.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", product.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", product.TrademarkId);
             return View(new CreateInfo { Product = product });
         }
 
@@ -220,6 +237,14 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
+            if (ModelState.IsValid &&
+                _context.Products.Alive().Any(p => p.Name == info.Product.Name &&
+                                                   p.Weight == info.Product.Weight &&
+                                                   p.TrademarkId == info.Product.TrademarkId &&
+                                                   p.CategoryId == info.Product.CategoryId &&
+                                                   p.CountryId == info.Product.CountryId &&
+                                                   p.Id != id))
+                ModelState.AddModelError("", "Такий продукт вже існує");
             if (ModelState.IsValid)
             {
                 try
@@ -240,9 +265,9 @@ namespace DeliveryWebApplication.Controllers
                 }
                 return RedirectToAction(nameof(Details), new { id });
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", info.Product.CategoryId);
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name", info.Product.CountryId);
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name", info.Product.TrademarkId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", info.Product.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", info.Product.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", info.Product.TrademarkId);
             return View(info);
         }
 
@@ -250,26 +275,28 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditTrademark(int id, CreateInfo info)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products.AliveFindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
             info.Product = product;
 
+            if (_context.Trademarks.Alive().Any(t => t.Name == info.Trademark.Name))
+                ModelState.AddModelError("Trademark.Name", "Така торгова марка вже існує");
             if (ModelState.IsValid)
             {
                 var entity = _context.Add(info.Trademark).Entity;
                 await _context.SaveChangesAsync();
                 product.TrademarkId = entity.Id;
-                ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name");
-                ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name");
-                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name");
+                ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
+                ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
+                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
                 return View(nameof(Edit), info);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", info.Product.CategoryId);
-            ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name", info.Product.CountryId);
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name", info.Product.TrademarkId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", info.Product.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", info.Product.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", info.Product.TrademarkId);
             return View(nameof(Edit), info);
         }
 
@@ -277,21 +304,23 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCategory(int id, CreateInfo info)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products.AliveFindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
             info.Product = product;
 
+            if (_context.Categories.Alive().Any(c => c.Name == info.Category.Name))
+                ModelState.AddModelError("Category.Name", "Така категорія вже існує");
             if (ModelState.IsValid)
             {
                 var entity = _context.Add(info.Category).Entity;
                 await _context.SaveChangesAsync();
                 product.CategoryId = entity.Id;
-                ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name");
-                ViewData["CountryId"] = new SelectList(_context.Countries.OrderBy(x => x.Name), "Id", "Name");
-                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.OrderBy(x => x.Name), "Id", "Name");
+                ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
+                ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
+                ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
                 return View(nameof(Edit), info);
             }
             ViewData["CategoryId"] = new SelectList(_context.Categories.OrderBy(x => x.Name), "Id", "Name", info.Product.CategoryId);
@@ -308,12 +337,13 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products
+            var product = await _context.Products.Alive()
                 .Include(p => p.Category)
                 .Include(p => p.Country)
                 .Include(p => p.Trademark)
+                .Include(p => p.ProductsInShops)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (product == null)
+            if (product == null || product.HasAlive)
             {
                 return NotFound();
             }
@@ -327,7 +357,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            _context.Products.Remove(product);
+            product.Deleted = true;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

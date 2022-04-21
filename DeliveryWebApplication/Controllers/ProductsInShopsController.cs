@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -17,40 +18,17 @@ namespace DeliveryWebApplication.Controllers
         public ProductsInShopsController(DeliveryContext context)
         {
             _context = context;
-        }
-
-        // GET: ProductsInShops
-        public async Task<IActionResult> Index()
-        {
-            var deliveryContext = _context.ProductsInShops.Include(p => p.Product).Include(p => p.Shop);
-            return View(await deliveryContext.ToListAsync());
-        }
-
-        // GET: ProductsInShops/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var productInShop = await _context.ProductsInShops
-                .Include(p => p.Product)
-                .Include(p => p.Shop)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (productInShop == null)
-            {
-                return NotFound();
-            }
-
-            return View(productInShop);
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: ProductsInShops/Create
-        public IActionResult Create()
+        public IActionResult Create(int productId, string productName, bool isPerKg)
         {
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id");
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Id");
+            ViewData["ProductId"] = productId;
+            ViewData["ProductName"] = productName;
+            ViewData["IsPerKg"] = isPerKg;
+            ViewData["ShopId"] = new SelectList(_context.Shops.Alive().Where(s => !s.ProductsInShops.Any(pis => pis.ProductId == productId && !pis.Deleted)), "Id", "Name", TempData["ShopId"]);
+            TempData.Keep();
             return View();
         }
 
@@ -65,10 +43,13 @@ namespace DeliveryWebApplication.Controllers
             {
                 _context.Add(productInShop);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(ProductsController.Details), "Products", new { id = productInShop.ProductId });
             }
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", productInShop.ProductId);
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Id", productInShop.ShopId);
+            ViewData["ProductId"] = productInShop.ProductId;
+            ViewData["ProductName"] = productInShop.Product.Name;
+            ViewData["IsPerKg"] = productInShop.Product.Weight is null;
+            ViewData["ShopId"] = new SelectList(_context.Shops.Alive().Where(s => !s.ProductsInShops.Any(pis => pis.ProductId == productInShop.ProductId && !pis.Deleted)), "Id", "Name", TempData["ShopId"]);
+            TempData.Keep();
             return View(productInShop);
         }
 
@@ -80,13 +61,15 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var productInShop = await _context.ProductsInShops.FindAsync(id);
+            var productInShop = await _context.ProductsInShops.Alive().Include(x => x.Product).Include(x => x.Shop).FirstOrDefaultAsync(x => x.Id == id);
             if (productInShop == null)
             {
                 return NotFound();
             }
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", productInShop.ProductId);
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Id", productInShop.ShopId);
+            
+            ViewData["ProductName"] = productInShop.Product.Name;
+            ViewData["IsPerKg"] = productInShop.Product.Weight is null;
+            ViewData["ShopNameWithAddress"] = productInShop.Shop.NameWithAddress;
             return View(productInShop);
         }
 
@@ -106,7 +89,11 @@ namespace DeliveryWebApplication.Controllers
             {
                 try
                 {
-                    _context.Update(productInShop);
+                    productInShop.Id = 0;
+                    _context.Add(productInShop);
+                    var oldProductInShop = await _context.ProductsInShops.FindAsync(id);
+                    oldProductInShop.Deleted = true;
+                    _context.Update(oldProductInShop);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -120,10 +107,11 @@ namespace DeliveryWebApplication.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(ProductsController.Details), "Products", new { id = productInShop.ProductId });
             }
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Id", productInShop.ProductId);
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Id", productInShop.ShopId);
+            ViewData["ProductName"] = productInShop.Product.Name;
+            ViewData["IsPerKg"] = productInShop.Product.Weight is null;
+            ViewData["ShopNameWithAddress"] = productInShop.Shop.NameWithAddress;
             return View(productInShop);
         }
 
@@ -135,7 +123,7 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var productInShop = await _context.ProductsInShops
+            var productInShop = await _context.ProductsInShops.Alive()
                 .Include(p => p.Product)
                 .Include(p => p.Shop)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -144,6 +132,8 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
+            ViewData["ProductName"] = productInShop.Product.Name;
+            ViewData["ShopNameWithAddress"] = productInShop.Shop.NameWithAddress;
             return View(productInShop);
         }
 
@@ -153,9 +143,9 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var productInShop = await _context.ProductsInShops.FindAsync(id);
-            _context.ProductsInShops.Remove(productInShop);
+            productInShop.Deleted = true;
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(ProductsController.Details), "Products", new { id = productInShop.ProductId });
         }
 
         private bool ProductInShopExists(int id)

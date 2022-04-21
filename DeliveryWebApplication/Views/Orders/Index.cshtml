@@ -1,81 +1,63 @@
 ﻿@model IEnumerable<DeliveryWebApplication.Order>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Замовлення";
 }
 
-<h1>Index</h1>
+<h1>Замовлення</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Створити замовлення</a>
 </p>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.DeliveryPrice)
+                @Html.DisplayNameFor(model => model.Id)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CreationTime)
+                @Html.DisplayNameFor(model => model.StateName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.DeliveryTime)
+                @Html.DisplayNameFor(model => model.Shop)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Address)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CustomerComment)
+                @Html.DisplayNameFor(model => model.ProductsCost)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CourierComment)
+                @Html.DisplayNameFor(model => model.DeliveryPrice)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Courier)
+                @Html.DisplayNameFor(model => model.TotalCost)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Customer)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Shop)
-            </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.DeliveryPrice)
+                <a asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem => item.Id)</a>
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CreationTime)
+                @Html.DisplayFor(modelItem => item.StateName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.DeliveryTime)
+                @Html.DisplayFor(modelItem => item.Shop.NameWithAddress)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Address)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CustomerComment)
+                @Html.DisplayFor(modelItem => item.ProductsCost) ₴
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CourierComment)
+                @Html.DisplayFor(modelItem => item.DeliveryPrice) ₴
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Courier.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Customer.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Shop.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @Html.DisplayFor(modelItem => item.TotalCost) ₴
             </td>
         </tr>
 }

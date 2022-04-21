@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
+using System.Globalization;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -17,30 +18,13 @@ namespace DeliveryWebApplication.Controllers
         public TrademarksController(DeliveryContext context)
         {
             _context = context;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
         }
 
         // GET: Trademarks
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Trademarks.Include(t => t.Products).ToListAsync());
-        }
-
-        // GET: Trademarks/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var trademark = await _context.Trademarks
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (trademark == null)
-            {
-                return NotFound();
-            }
-
-            return View(trademark);
+            return View(await _context.Trademarks.Alive().Include(t => t.Products).ToListAsync());
         }
 
         // GET: Trademarks/Create
@@ -56,6 +40,8 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Trademark trademark)
         {
+            if (_context.Trademarks.Alive().Any(t => t.Name == trademark.Name))
+                ModelState.AddModelError("Name", "Така торгова марка вже існує");
             if (ModelState.IsValid)
             {
                 _context.Add(trademark);
@@ -73,7 +59,7 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var trademark = await _context.Trademarks.FindAsync(id);
+            var trademark = await _context.Trademarks.AliveFindAsync(id);
             if (trademark == null)
             {
                 return NotFound();
@@ -88,11 +74,13 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Trademark trademark)
         {
-            if (id != trademark.Id)
+            if (id != trademark.Id || trademark.Deleted)
             {
                 return NotFound();
             }
 
+            if (_context.Trademarks.Alive().Any(t => t.Name == trademark.Name && t.Id != trademark.Id))
+                ModelState.AddModelError("Name", "Така торгова марка вже існує");
             if (ModelState.IsValid)
             {
                 try
@@ -124,10 +112,11 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            var trademark = await _context.Trademarks
+            var trademark = await _context.Trademarks.Alive()
+                .Include(t => t.Products)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (trademark == null)
+            if (trademark == null || trademark.HasAlive)
             {
                 return NotFound();
             }
@@ -141,7 +130,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var trademark = await _context.Trademarks.FindAsync(id);
-            _context.Trademarks.Remove(trademark);
+            trademark.Deleted = true;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
