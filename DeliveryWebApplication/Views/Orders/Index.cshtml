@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DeliveryWebApplication.Order>
+﻿@model DeliveryWebApplication.Controllers.OrdersController.FilterClass
 
 @{
     ViewData["Title"] = "Замовлення";
@@ -6,43 +6,86 @@
 
 <h1>Замовлення</h1>
 
+<hr />
+<h4>Фільтр</h4>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Index">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="CustomerId" class="control-label"></label> (<a asp-action="Index" asp-controller="Customers">відкрити список</a>)
+                <select asp-for="CustomerId" class ="form-control" asp-items="ViewBag.CustomerId"><option/></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CourierId" class="control-label"></label> (<a asp-action="Index" asp-controller="Couriers">відкрити список</a>)
+                <select asp-for="CourierId" class ="form-control" asp-items="ViewBag.CourierId"><option/></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Orders">відкрити список</a>)
+                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="StatusId" class="control-label"></label>
+                <select asp-for="StatusId" class ="form-control" asp-items="ViewBag.StatusId"></select>
+            </div>
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<hr />
+
 <p>
     <a asp-action="Create">Створити замовлення</a>
 </p>
+
+<hr />
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Id)
+                @Html.DisplayNameFor(model => model.Orders.First().Id)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.StateName)
+                @Html.DisplayNameFor(model => model.Orders.First().StatusName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Shop)
+                @Html.DisplayNameFor(model => model.Orders.First().Shop)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Address)
+                @Html.DisplayNameFor(model => model.Orders.First().Address)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ProductsCost)
+                @Html.DisplayNameFor(model => model.Orders.First().ProductsCost)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.DeliveryPrice)
+                @Html.DisplayNameFor(model => model.Orders.First().DeliveryPrice)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.TotalCost)
+                @Html.DisplayNameFor(model => model.Orders.First().TotalCost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Orders.First().CreationTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Orders.First().DeliveryTime)
             </th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.Orders.OrderBy(o => o.StatusId % 2 * (o.StatusId + 2) % 5)
+                                  .ThenByDescending(o => o.DeliveryTime ?? o.CreationTime ?? DateTime.MaxValue)) {
         <tr>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem => item.Id)</a>
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.StateName)
+                @Html.DisplayFor(modelItem => item.StatusName)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Shop.NameWithAddress)
@@ -51,13 +94,19 @@
                 @Html.DisplayFor(modelItem => item.Address)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ProductsCost) ₴
+                @Html.DisplayFor(modelItem => item.ProductsCost)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.DeliveryPrice) ₴
+                @Html.DisplayFor(modelItem => item.DeliveryPrice)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.TotalCost) ₴
+                @Html.DisplayFor(modelItem => item.TotalCost)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreationTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DeliveryTime)
             </td>
         </tr>
 }

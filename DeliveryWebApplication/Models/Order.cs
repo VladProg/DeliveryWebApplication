@@ -13,11 +13,17 @@ namespace DeliveryWebApplication
 
         [Display(Name = "Номер")]
         public int Id { get; set; }
+        [Display(Name = "Клієнт")]
+        [Required(ErrorMessage = "Оберіть клієнта")]
         public int CustomerId { get; set; }
+        [Display(Name = "Кур'єр")]
         public int? CourierId { get; set; }
+        [Display(Name = "Магазин")]
+        [Required(ErrorMessage = "Оберіть магазин")]
         public int ShopId { get; set; }
         [Display(Name = "Ціна доставки")]
-        public decimal DeliveryPrice { get; set; }
+        [DisplayFormat(DataFormatString = "{0:n2} ₴")]
+        public decimal? DeliveryPrice { get; set; }
         [Display(Name = "Час створення")]
         public DateTime? CreationTime { get; set; }
         [Display(Name = "Час доставки")]
@@ -37,32 +43,37 @@ namespace DeliveryWebApplication
         public virtual Shop Shop { get; set; } = null!;
         public virtual ICollection<OrderItem> OrderItems { get; set; }
 
-        public int StateCode
+        public int StatusId
         {
             get
             {
-                if (CreationTime is null) return 0;
-                if (CourierId is null && CourierComment is null) return 1;
-                if (DeliveryTime is null) return 2;
-                if (CourierId is null) return 3;
-                return 4;
+                if (CreationTime is null) return 1;
+                if (CourierId is null && CourierComment is null) return 2;
+                if (DeliveryTime is null) return 3;
+                if (CourierId is null) return 4;
+                return 5;
             }
         }
 
-        [Display(Name = "Статус")]
-        public string StateName => new string[]
+        public static readonly string[] STATUS_NAMES =
         {
+            "",
             "Клієнт формує замовлення",
             "Шукаємо кур'єра для доставки замовлення",
             "Кур'єр доставляє замовлення",
             "Кур'єр відмовився доставляти замовлення",
             "Замовлення вже доставлене"
-        }[StateCode];
+        };
+
+        [Display(Name = "Статус")]
+        public string StatusName => STATUS_NAMES[StatusId];
 
         [Display(Name = "Вартість продуктів")]
+        [DisplayFormat(DataFormatString = "{0:n2} ₴")]
         public decimal ProductsCost => OrderItems.Select(oi => oi.Cost).Sum();
 
         [Display(Name = "Загальна вартість")]
+        [DisplayFormat(DataFormatString = "{0:n2} ₴")]
         public decimal? TotalCost => ProductsCost + DeliveryPrice;
     }
 }

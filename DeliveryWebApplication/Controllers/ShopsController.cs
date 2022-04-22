@@ -22,8 +22,9 @@ namespace DeliveryWebApplication.Controllers
         }
 
         // GET: Shops
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? back)
         {
+            ViewData["Back"] = back;
             return View(await _context.Shops.Alive().Include(s => s.ProductsInShops).ToListAsync());
         }
 

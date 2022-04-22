@@ -7,8 +7,15 @@
 <h1>Магазини</h1>
 
 <p>
-    <a asp-action="Create">Створити магазин</a> |
-    <a asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
+    <a asp-action="Create">Створити магазин</a>
+    @if((string)ViewData["Back"]=="Products")
+    {
+        <text>|</text> <a asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
+    }
+    else if((string)ViewData["Back"]=="Orders")
+    {
+        <text>|</text> <a asp-controller="Orders" asp-action="Index">Повернутися до списку замовлень</a>
+    }
 </p>
 *Щоб видалити магазин, спочатку видаліть всі продукти з нього.
 <br />

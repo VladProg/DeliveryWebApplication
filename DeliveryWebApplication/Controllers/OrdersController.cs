@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Diagnostics;
 using System.Globalization;
+using System.ComponentModel.DataAnnotations;
 
 namespace DeliveryWebApplication.Controllers
 {
@@ -25,8 +26,83 @@ namespace DeliveryWebApplication.Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            var deliveryContext = _context.Orders.Include(o => o.Courier).Include(o => o.Customer).Include(o => o.Shop);
-            return View(await deliveryContext.ToListAsync());
+            IEnumerable<Order> deliveryContext = _context.Orders.Include(p => p.Courier).Include(p => p.Customer).Include(p => p.Shop).Include(p => p.OrderItems).ThenInclude(item => item.ProductInShop);
+            var customer = await _context.Customers.Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.CustomerId);
+            var courier = await _context.Couriers.Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.CourierId);
+            var shop = await _context.Shops.Alive().Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.ShopId);
+            if (customer is null || !customer.Orders.Any()) Filter.CustomerId = 0;
+            if (courier is null || !courier.Orders.Any()) Filter.CourierId = 0;
+            if (shop is null || !shop.Orders.Any()) Filter.ShopId = 0;
+            Filter = Filter;
+            if (Filter.CustomerId != 0) deliveryContext = deliveryContext.Where(p => p.CustomerId == Filter.CustomerId);
+            if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ShopId == Filter.ShopId);
+            deliveryContext = deliveryContext.AsEnumerable();
+            if (Filter.CourierId != 0)
+                deliveryContext = Filter.StatusId switch
+                {
+                    0 => deliveryContext.Where(p => p.CourierId == Filter.CourierId),
+                    1 or 2 => deliveryContext.Where(p => p.CourierId == Filter.CourierId || p.StatusId == Filter.StatusId),
+                    3 or 4 or 5 => deliveryContext.Where(p => p.CourierId == Filter.CourierId && p.StatusId == Filter.StatusId),
+                };
+            else if(Filter.StatusId != 0)
+                deliveryContext = deliveryContext.Where(p => p.StatusId == Filter.StatusId);
+            ViewData["CustomerId"] = new SelectList(_context.Customers.Where(x => x.Orders.Any()).OrderBy(x => x.Name + " " + x.Phone), "Id", "NameWithPhone");
+            ViewData["CourierId"] = new SelectList(_context.Couriers.Where(x => x.Orders.Any()).OrderBy(x => x.Name + " " + x.Phone), "Id", "NameWithPhone");
+            ViewData["ShopId"] = new SelectList(_context.Shops.Where(x => x.Orders.Any()).OrderBy(x => x.Name + " " + x.Address), "Id", "NameWithAddress");
+            ViewData["StatusId"] = new SelectList(Order.STATUS_NAMES.Select((Name, Id) => new { Name, Id }), "Id", "Name");
+            Filter.Orders = deliveryContext.ToList();
+            TempData["Back"] = "Orders";
+            return View(Filter);
+        }
+
+        public class FilterClass
+        {
+            public FilterClass() { }
+            public List<Order> Orders;
+            [Display(Name = "Клієнт")]
+            public int CustomerId { get; set; } = 0;
+            [Display(Name = "Кур'єр")]
+            public int CourierId { get; set; } = 0;
+            [Display(Name = "Магазин")]
+            public int ShopId { get; set; } = 0;
+            [Display(Name = "Статус")]
+            public int StatusId { get; set; } = 0;
+        }
+
+        private FilterClass _filter = null;
+
+        public FilterClass Filter
+        {
+            get
+            {
+                if (_filter is null)
+                {
+                    _filter = new();
+                    _filter.CustomerId = TempData["CustomerId"] is int CustomerId ? CustomerId : 0;
+                    _filter.CourierId = TempData["CourierId"] is int CourierId ? CourierId : 0;
+                    _filter.ShopId = TempData["ShopId"] is int ShopId ? ShopId : 0;
+                    _filter.StatusId = TempData["StatusId"] is int StatusId ? StatusId : 0;
+                }
+                TempData.Keep();
+                return _filter;
+            }
+            set
+            {
+                _filter = value;
+                TempData["CustomerId"] = _filter.CustomerId;
+                TempData["CourierId"] = _filter.CourierId;
+                TempData["ShopId"] = _filter.ShopId;
+                TempData["StatusId"] = _filter.StatusId;
+                TempData.Keep();
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Index(FilterClass model)
+        {
+            Filter = model;
+            return await Index();
         }
 
         // GET: Orders/Details/5
@@ -53,9 +129,8 @@ namespace DeliveryWebApplication.Controllers
         // GET: Orders/Create
         public IActionResult Create()
         {
-            ViewData["CourierId"] = new SelectList(_context.Couriers, "Id", "Name");
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Name");
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Name");
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "NameWithPhone");
+            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "NameWithAddress");
             return View();
         }
 
@@ -66,15 +141,16 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,CustomerId,CourierId,ShopId,DeliveryPrice,CreationTime,DeliveryTime,Address,CustomerComment,CourierComment")] Order order)
         {
+            order.Address = "";
+            order.CustomerComment = "";
             if (ModelState.IsValid)
             {
                 _context.Add(order);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CourierId"] = new SelectList(_context.Couriers, "Id", "Name", order.CourierId);
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Name", order.CustomerId);
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "Name", order.ShopId);
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "NameWithPhone", order.CustomerId);
+            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "NameWithAddress", order.ShopId);
             return View(order);
         }
 

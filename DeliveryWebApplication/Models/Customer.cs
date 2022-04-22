@@ -15,5 +15,7 @@ namespace DeliveryWebApplication
         public string Phone { get; set; } = null!;
 
         public virtual ICollection<Order> Orders { get; set; }
+
+        public string NameWithPhone => Name + ", " + Phone;
     }
 }

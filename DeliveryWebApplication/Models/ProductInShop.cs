@@ -37,7 +37,6 @@ namespace DeliveryWebApplication
                     return Price.ToString("0.00") + " ₴/кг";
                 else
                     return Price.ToString("0.00") + " ₴";
-                //return "FormattedPrice";
             }
         }
     }

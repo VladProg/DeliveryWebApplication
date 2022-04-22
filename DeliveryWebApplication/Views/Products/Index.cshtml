@@ -25,9 +25,10 @@
                 <select asp-for="CountryId" class ="form-control" asp-items="ViewBag.CountryId"><option/></select>
             </div>
             <div class="form-group">
-                <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops">відкрити список</a>)
+                <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Products">відкрити список</a>)
                 <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
             </div>
+            <br />
             <div class="form-group">
                 <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
             </div>
