@@ -40,9 +40,12 @@ namespace DeliveryWebApplication.Controllers
             if (Filter.CourierId != 0)
                 deliveryContext = Filter.StatusId switch
                 {
-                    0 => deliveryContext.Where(p => p.CourierId == Filter.CourierId),
-                    1 or 2 => deliveryContext.Where(p => p.CourierId == Filter.CourierId || p.StatusId == Filter.StatusId),
-                    3 or 4 or 5 => deliveryContext.Where(p => p.CourierId == Filter.CourierId && p.StatusId == Filter.StatusId),
+                    Order.Status.None =>
+                        deliveryContext.Where(p => p.CourierId == Filter.CourierId),
+                    Order.Status.Creating or Order.Status.Waiting =>
+                        deliveryContext.Where(p => p.CourierId == Filter.CourierId || p.StatusId == Filter.StatusId),
+                    Order.Status.Delivering or Order.Status.Refused or Order.Status.Completed =>
+                        deliveryContext.Where(p => p.CourierId == Filter.CourierId && p.StatusId == Filter.StatusId),
                 };
             else if(Filter.StatusId != 0)
                 deliveryContext = deliveryContext.Where(p => p.StatusId == Filter.StatusId);
@@ -66,7 +69,7 @@ namespace DeliveryWebApplication.Controllers
             [Display(Name = "Магазин")]
             public int ShopId { get; set; } = 0;
             [Display(Name = "Статус")]
-            public int StatusId { get; set; } = 0;
+            public Order.Status StatusId { get; set; } = 0;
         }
 
         private FilterClass _filter = null;
@@ -81,7 +84,7 @@ namespace DeliveryWebApplication.Controllers
                     _filter.CustomerId = TempData["CustomerId"] is int CustomerId ? CustomerId : 0;
                     _filter.CourierId = TempData["CourierId"] is int CourierId ? CourierId : 0;
                     _filter.ShopId = TempData["ShopId"] is int ShopId ? ShopId : 0;
-                    _filter.StatusId = TempData["StatusId"] is int StatusId ? StatusId : 0;
+                    _filter.StatusId = TempData["StatusId"] is Order.Status StatusId ? StatusId : Order.Status.None;
                 }
                 TempData.Keep();
                 return _filter;

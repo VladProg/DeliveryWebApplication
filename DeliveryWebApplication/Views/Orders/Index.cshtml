@@ -78,7 +78,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Orders.OrderBy(o => o.StatusId % 2 * (o.StatusId + 2) % 5)
+@foreach (var item in Model.Orders.OrderBy(o => Math.Max((int)o.StatusId, (int)Order.Status.Refused))
                                   .ThenByDescending(o => o.DeliveryTime ?? o.CreationTime ?? DateTime.MaxValue)) {
         <tr>
             <td>

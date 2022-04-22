@@ -43,30 +43,32 @@ namespace DeliveryWebApplication
         public virtual Shop Shop { get; set; } = null!;
         public virtual ICollection<OrderItem> OrderItems { get; set; }
 
-        public int StatusId
+        public enum Status { None, Waiting, Refused, Delivering, Creating, Completed };
+
+        public Status StatusId
         {
             get
             {
-                if (CreationTime is null) return 1;
-                if (CourierId is null && CourierComment is null) return 2;
-                if (DeliveryTime is null) return 3;
-                if (CourierId is null) return 4;
-                return 5;
+                if (CreationTime is null) return Status.Creating;
+                if (CourierId is null && CourierComment is null) return Status.Waiting;
+                if (DeliveryTime is null) return Status.Delivering;
+                if (CourierId is null) return Status.Refused;
+                return Status.Completed;
             }
         }
 
         public static readonly string[] STATUS_NAMES =
         {
             "",
-            "Клієнт формує замовлення",
             "Шукаємо кур'єра для доставки замовлення",
-            "Кур'єр доставляє замовлення",
             "Кур'єр відмовився доставляти замовлення",
+            "Кур'єр доставляє замовлення",
+            "Клієнт формує замовлення",
             "Замовлення вже доставлене"
         };
 
         [Display(Name = "Статус")]
-        public string StatusName => STATUS_NAMES[StatusId];
+        public string StatusName => STATUS_NAMES[(int)StatusId];
 
         [Display(Name = "Вартість продуктів")]
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
