@@ -42,9 +42,7 @@ namespace DeliveryWebApplication
         public virtual ICollection<ProductInShop> ProductsInShops { get; set; }
 
         [Display(Name = "Вага")]
-        public string WeightOrEmpty => Weight is null ? "—" :
-                                                        Weight < 1 ? ((int)(Weight*1000)).ToString() + " г" :
-                                                                     Weight?.ToString("0.###") + " кг";
+        public string FormattedWeight => Utils.FormattedWeight(Weight);
 
         [Display(Name = "Ціна")]
         public string this[int shopId]

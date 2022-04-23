@@ -18,41 +18,21 @@ namespace DeliveryWebApplication.Controllers
         public OrderItemsController(DeliveryContext context)
         {
             _context = context;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-        }
-
-        // GET: OrderItems
-        public async Task<IActionResult> Index()
-        {
-            var deliveryContext = _context.OrderItems.Include(o => o.Order).Include(o => o.ProductInShop);
-            return View(await deliveryContext.ToListAsync());
-        }
-
-        // GET: OrderItems/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var orderItem = await _context.OrderItems
-                .Include(o => o.Order)
-                .Include(o => o.ProductInShop)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (orderItem == null)
-            {
-                return NotFound();
-            }
-
-            return View(orderItem);
+            Utils.SetCulture();
         }
 
         // GET: OrderItems/Create
-        public IActionResult Create()
+        public IActionResult Create(int productInShopId, int shopId, string shopName, int productId, string productName, string price, string productWeight)
         {
-            ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id");
-            ViewData["ProductInShopId"] = new SelectList(_context.ProductsInShops, "Id", "Id");
+            ViewData["ProductInShopId"] = productInShopId;
+            ViewData["ShopId"] = shopId;
+            ViewData["ShopName"] = shopName;
+            ViewData["ProductId"] = productId;
+            ViewData["ProductName"] = productName;
+            ViewData["Price"] = price;
+            ViewData["ProductWeight"] = productWeight;
+            ViewData["OrderId"] = new SelectList(_context.Orders.Include(o => o.Customer).Where(o => o.ShopId == shopId && o.CreationTime == null), "Id", "Description", TempData["OrderId"]);
+            TempData.Keep();
             return View();
         }
 
@@ -61,16 +41,22 @@ namespace DeliveryWebApplication.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,OrderId,ProductInShopId,Count")] OrderItem orderItem)
+        public async Task<IActionResult> Create([Bind("Id,OrderId,ProductInShopId,Count,Weight")] OrderItem orderItem, int productInShopId, int shopId, string shopName, int productId, string productName, string price, string productWeight)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(orderItem);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Orders", new { id = orderItem.OrderId });
             }
-            ViewData["OrderId"] = new SelectList(_context.Orders, "Id", "Id", orderItem.OrderId);
-            ViewData["ProductInShopId"] = new SelectList(_context.ProductsInShops, "Id", "Id", orderItem.ProductInShopId);
+            ViewData["ProductInShopId"] = productInShopId;
+            ViewData["ShopId"] = shopId;
+            ViewData["ShopName"] = shopName;
+            ViewData["ProductId"] = productId;
+            ViewData["ProductName"] = productName;
+            ViewData["Price"] = price;
+            ViewData["ProductWeight"] = productWeight;
+            ViewData["OrderId"] = new SelectList(_context.Orders.Include(o => o.Customer).Where(o => o.ShopId == shopId && o.CreationTime == null), "Id", "Description", TempData["OrderId"]);
             return View(orderItem);
         }
 

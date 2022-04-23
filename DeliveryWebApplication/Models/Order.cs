@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DeliveryWebApplication
 {
@@ -25,10 +26,12 @@ namespace DeliveryWebApplication
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
         public decimal? DeliveryPrice { get; set; }
         [Display(Name = "Час створення")]
+        [DisplayFormat(DataFormatString = "{0:dd.MM.yy HH:mm:ss}")]
         public DateTime? CreationTime { get; set; }
+        [DisplayFormat(DataFormatString = "{0:dd.MM.yy HH:mm:ss}")]
         [Display(Name = "Час доставки")]
         public DateTime? DeliveryTime { get; set; }
-        [Display(Name = "Адреса")]
+        [Display(Name = "Адреса доставки")]
         public string Address { get; set; }
         [Display(Name = "Коментар клієнта")]
         public string CustomerComment { get; set; }
@@ -43,7 +46,7 @@ namespace DeliveryWebApplication
         public virtual Shop Shop { get; set; } = null!;
         public virtual ICollection<OrderItem> OrderItems { get; set; }
 
-        public enum Status { None, Waiting, Refused, Delivering, Creating, Completed };
+        public enum Status { None, Delivering, Waiting, Refused, Creating, Completed };
 
         public Status StatusId
         {
@@ -51,24 +54,36 @@ namespace DeliveryWebApplication
             {
                 if (CreationTime is null) return Status.Creating;
                 if (CourierId is null && CourierComment is null) return Status.Waiting;
-                if (DeliveryTime is null) return Status.Delivering;
                 if (CourierId is null) return Status.Refused;
+                if (DeliveryTime is null) return Status.Delivering;
                 return Status.Completed;
             }
         }
 
-        public static readonly string[] STATUS_NAMES =
+        public struct IconWithName
         {
-            "",
-            "Шукаємо кур'єра для доставки замовлення",
-            "Кур'єр відмовився доставляти замовлення",
-            "Кур'єр доставляє замовлення",
-            "Клієнт формує замовлення",
-            "Замовлення вже доставлене"
+            public string Icon;
+            public string Name;
+            public string Full => Icon + " " + Name;
+            public IconWithName(string icon, string name)
+            {
+                Icon = icon;
+                Name = name;
+            }
+        }
+
+        public static readonly IconWithName[] STATUS_NAMES =
+        {
+            new IconWithName("",""),
+            new IconWithName("🚚","Кур'єр доставляє замовлення"),
+            new IconWithName("🔍","Шукаємо кур'єра для доставки замовлення"),
+            new IconWithName("❌","Кур'єр відмовився доставляти замовлення"),
+            new IconWithName("📝","Клієнт формує замовлення"),
+            new IconWithName("✅","Замовлення доставлене")
         };
 
         [Display(Name = "Статус")]
-        public string StatusName => STATUS_NAMES[(int)StatusId];
+        public IconWithName StatusName => STATUS_NAMES[(int)StatusId];
 
         [Display(Name = "Вартість продуктів")]
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
@@ -77,5 +92,12 @@ namespace DeliveryWebApplication
         [Display(Name = "Загальна вартість")]
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
         public decimal? TotalCost => ProductsCost + DeliveryPrice;
+
+        [Display(Name = "Вага")]
+        public decimal Weight => OrderItems.Sum(oi => oi.Weight);
+        [Display(Name = "Вага")]
+        public string FormattedWeight => Utils.FormattedWeight(Weight);
+
+        public string Description => "#" + Id + (Customer is null ? "" : " — " + Customer.NameWithPhone);
     }
 }

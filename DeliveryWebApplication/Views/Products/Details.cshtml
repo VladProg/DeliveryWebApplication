@@ -17,10 +17,10 @@
             @Html.DisplayFor(model => model.Name)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.WeightOrEmpty)
+            @Html.DisplayNameFor(model => model.FormattedWeight)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.WeightOrEmpty)
+            @Html.DisplayFor(model => model.FormattedWeight)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Trademark)
@@ -99,7 +99,8 @@
             </td>
             <td>
                 <a asp-action="Edit" asp-controller="ProductsInShops" asp-route-id="@item.Id">Змінити ціну</a> |
-                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазина</a>
+                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазина</a> |
+                <a asp-action="Create" asp-controller="OrderItems" asp-route-productInShopId="@item.Id" asp-route-shopId="@item.ShopId" asp-route-shopName="@item.Shop.NameWithAddress" asp-route-productId="@item.ProductId" asp-route-productName="@item.Product.Name" asp-route-price="@item.FormattedPrice" asp-route-productWeight="@item.Product.FormattedWeight">Додати до замовлення</a>
             </td>
         </tr>
 }

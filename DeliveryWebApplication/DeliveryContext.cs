@@ -24,9 +24,30 @@ namespace DeliveryWebApplication
                 return res;
         }
 
-        //public static bool HasAlive<T>(this IEnumerable<T> seq) where T : Deletable => seq.Any(x => !x.Deleted);
-        //public static IQueryable<T> HasAlive<T,U>(this IQueryable<T> seq, Func<T, IEnumerable<U>> func) where U : Deletable =>
-        //    seq.Where(x => func(x).Any(y=>!y.Deleted));
+    }
+
+    public static class Utils
+    {
+        public static string FormattedWeight(int? weight)
+        {
+            if (weight is null)
+                return "—";
+            if (weight < 1000)
+                return weight + " г";
+            else
+                return ((decimal)weight / 1000).ToString("0.###") + " кг";
+        }
+
+        public static string FormattedWeight(decimal? weight) => FormattedWeight((int?)(weight * 1000));
+
+        public static void SetCulture()
+        {
+            var cul = new System.Globalization.CultureInfo("en-US");
+            cul.NumberFormat.NumberDecimalSeparator = ".";
+            cul.NumberFormat.NumberGroupSeparator = "";
+            Thread.CurrentThread.CurrentCulture = cul;
+
+        }
     }
 
     public partial class DeliveryContext : DbContext

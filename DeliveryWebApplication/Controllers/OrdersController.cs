@@ -20,38 +20,34 @@ namespace DeliveryWebApplication.Controllers
         public OrdersController(DeliveryContext context)
         {
             _context = context;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            Utils.SetCulture();
         }
 
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            IEnumerable<Order> deliveryContext = _context.Orders.Include(p => p.Courier).Include(p => p.Customer).Include(p => p.Shop).Include(p => p.OrderItems).ThenInclude(item => item.ProductInShop);
+            if (!Filter.Creating && !Filter.Waiting && !Filter.Delivering && !Filter.Refused && !Filter.Completed)
+                Filter.Creating = Filter.Waiting = Filter.Delivering = Filter.Refused = Filter.Completed = true;
+            IEnumerable<Order> deliveryContext = _context.Orders.Include(p => p.Courier).Include(p => p.Customer).Include(p => p.Shop).Include(p => p.OrderItems).ThenInclude(item => item.ProductInShop).ThenInclude(pis => pis.Product);
             var customer = await _context.Customers.Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.CustomerId);
             var courier = await _context.Couriers.Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.CourierId);
             var shop = await _context.Shops.Alive().Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.ShopId);
-            if (customer is null || !customer.Orders.Any()) Filter.CustomerId = 0;
-            if (courier is null || !courier.Orders.Any()) Filter.CourierId = 0;
-            if (shop is null || !shop.Orders.Any()) Filter.ShopId = 0;
+            if (customer is null) Filter.CustomerId = 0;
+            if (courier is null) Filter.CourierId = 0;
+            if (shop is null || !shop.Orders.Any() && !shop.ProductsInShops.Any(y => !y.Deleted)) Filter.ShopId = 0;
             Filter = Filter;
             if (Filter.CustomerId != 0) deliveryContext = deliveryContext.Where(p => p.CustomerId == Filter.CustomerId);
             if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ShopId == Filter.ShopId);
+            if (Filter.CourierId != 0) deliveryContext = deliveryContext.Where(o => o.CourierId is null || o.CourierId == Filter.CourierId);
             deliveryContext = deliveryContext.AsEnumerable();
-            if (Filter.CourierId != 0)
-                deliveryContext = Filter.StatusId switch
-                {
-                    Order.Status.None =>
-                        deliveryContext.Where(p => p.CourierId == Filter.CourierId),
-                    Order.Status.Creating or Order.Status.Waiting =>
-                        deliveryContext.Where(p => p.CourierId == Filter.CourierId || p.StatusId == Filter.StatusId),
-                    Order.Status.Delivering or Order.Status.Refused or Order.Status.Completed =>
-                        deliveryContext.Where(p => p.CourierId == Filter.CourierId && p.StatusId == Filter.StatusId),
-                };
-            else if(Filter.StatusId != 0)
-                deliveryContext = deliveryContext.Where(p => p.StatusId == Filter.StatusId);
-            ViewData["CustomerId"] = new SelectList(_context.Customers.Where(x => x.Orders.Any()).OrderBy(x => x.Name + " " + x.Phone), "Id", "NameWithPhone");
-            ViewData["CourierId"] = new SelectList(_context.Couriers.Where(x => x.Orders.Any()).OrderBy(x => x.Name + " " + x.Phone), "Id", "NameWithPhone");
-            ViewData["ShopId"] = new SelectList(_context.Shops.Where(x => x.Orders.Any()).OrderBy(x => x.Name + " " + x.Address), "Id", "NameWithAddress");
+            if (!Filter.Creating) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Creating);
+            if (!Filter.Waiting) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Waiting);
+            if (!Filter.Delivering) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Delivering);
+            if (!Filter.Refused) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Refused);
+            if (!Filter.Completed) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Completed);
+            ViewData["CustomerId"] = new SelectList(_context.Customers.OrderBy(x => x.Phone + " " + x.Name), "Id", "NameWithPhone");
+            ViewData["CourierId"] = new SelectList(_context.Couriers.OrderBy(x => x.Phone + " " + x.Name), "Id", "NameWithPhone");
+            ViewData["ShopId"] = new SelectList(_context.Shops.Where(x => x.Orders.Any() || x.ProductsInShops.Any(y => !y.Deleted)).OrderBy(x => x.Name + " " + x.Address), "Id", "NameWithAddress");
             ViewData["StatusId"] = new SelectList(Order.STATUS_NAMES.Select((Name, Id) => new { Name, Id }), "Id", "Name");
             Filter.Orders = deliveryContext.ToList();
             TempData["Back"] = "Orders";
@@ -68,8 +64,12 @@ namespace DeliveryWebApplication.Controllers
             public int CourierId { get; set; } = 0;
             [Display(Name = "Магазин")]
             public int ShopId { get; set; } = 0;
-            [Display(Name = "Статус")]
-            public Order.Status StatusId { get; set; } = 0;
+
+            public bool Creating { get; set; } = true;
+            public bool Waiting { get; set; } = true;
+            public bool Delivering { get; set; } = true;
+            public bool Refused { get; set; } = true;
+            public bool Completed { get; set; } = true;
         }
 
         private FilterClass _filter = null;
@@ -84,7 +84,11 @@ namespace DeliveryWebApplication.Controllers
                     _filter.CustomerId = TempData["CustomerId"] is int CustomerId ? CustomerId : 0;
                     _filter.CourierId = TempData["CourierId"] is int CourierId ? CourierId : 0;
                     _filter.ShopId = TempData["ShopId"] is int ShopId ? ShopId : 0;
-                    _filter.StatusId = TempData["StatusId"] is Order.Status StatusId ? StatusId : Order.Status.None;
+                    _filter.Creating = TempData["Creating"] as bool? ?? true;
+                    _filter.Waiting = TempData["Waiting"] as bool? ?? true;
+                    _filter.Delivering = TempData["Delivering"] as bool? ?? true;
+                    _filter.Refused = TempData["Refused"] as bool? ?? true;
+                    _filter.Completed = TempData["Completed"] as bool? ?? true;
                 }
                 TempData.Keep();
                 return _filter;
@@ -95,7 +99,11 @@ namespace DeliveryWebApplication.Controllers
                 TempData["CustomerId"] = _filter.CustomerId;
                 TempData["CourierId"] = _filter.CourierId;
                 TempData["ShopId"] = _filter.ShopId;
-                TempData["StatusId"] = _filter.StatusId;
+                TempData["Creating"] = _filter.Creating;
+                TempData["Waiting"] = _filter.Waiting;
+                TempData["Delivering"] = _filter.Delivering;
+                TempData["Refused"] = _filter.Refused;
+                TempData["Completed"] = _filter.Completed;
                 TempData.Keep();
             }
         }
@@ -120,6 +128,9 @@ namespace DeliveryWebApplication.Controllers
                 .Include(o => o.Courier)
                 .Include(o => o.Customer)
                 .Include(o => o.Shop)
+                .Include(o => o.OrderItems)
+                .ThenInclude(item => item.ProductInShop)
+                .ThenInclude(pis => pis.Product)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
             {
@@ -132,8 +143,8 @@ namespace DeliveryWebApplication.Controllers
         // GET: Orders/Create
         public IActionResult Create()
         {
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "NameWithPhone");
-            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "NameWithAddress");
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "NameWithPhone", Filter.CustomerId);
+            ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "NameWithAddress", Filter.ShopId);
             return View();
         }
 
@@ -150,7 +161,7 @@ namespace DeliveryWebApplication.Controllers
             {
                 _context.Add(order);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = order.Id });
             }
             ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "NameWithPhone", order.CustomerId);
             ViewData["ShopId"] = new SelectList(_context.Shops, "Id", "NameWithAddress", order.ShopId);

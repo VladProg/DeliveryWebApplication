@@ -18,7 +18,7 @@ namespace DeliveryWebApplication.Controllers
         public TrademarksController(DeliveryContext context)
         {
             _context = context;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            Utils.SetCulture();
         }
 
         // GET: Trademarks

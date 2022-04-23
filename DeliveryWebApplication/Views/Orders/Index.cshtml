@@ -6,6 +6,23 @@
 
 <h1>Замовлення</h1>
 
+<style>
+    .Creating         { background: #ffffff }
+    .Creating:hover   { background: #f0f0f0 }
+    
+    .Delivering       { background: #f0f0ff }
+    .Delivering:hover { background: #e0e0ff }
+    
+    .Waiting          { background: #fffff0 }
+    .Waiting:hover    { background: #ffffd0 }
+    
+    .Refused          { background: #fff0f0 }
+    .Refused:hover    { background: #ffe0e0 }
+    
+    .Completed        { background: #f0fff0 }
+    .Completed:hover  { background: #d0ffd0 }
+</style>
+
 <hr />
 <h4>Фільтр</h4>
 <div class="row">
@@ -24,10 +41,16 @@
                 <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Orders">відкрити список</a>)
                 <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
             </div>
-            <div class="form-group">
-                <label asp-for="StatusId" class="control-label"></label>
-                <select asp-for="StatusId" class ="form-control" asp-items="ViewBag.StatusId"></select>
-            </div>
+
+            Статус <br />
+            <table width="100%" style="border: 1px solid #d0d0d0">
+                <tr class="Creating"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Creating) <label for="Creating"> @Order.STATUS_NAMES[(int)Order.Status.Creating].Full </label> </td> </tr>
+                <tr class="Waiting"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Waiting) <label for="Waiting"> @Order.STATUS_NAMES[(int)Order.Status.Waiting].Full </label> </td> </tr>
+                <tr class="Delivering"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Delivering) <label for="Delivering"> @Order.STATUS_NAMES[(int)Order.Status.Delivering].Full </label> </td> </tr>
+                <tr class="Refused"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Refused) <label for="Refused"> @Order.STATUS_NAMES[(int)Order.Status.Refused].Full </label> </td> </tr>
+                <tr class="Completed"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Completed) <label for="Completed"> @Order.STATUS_NAMES[(int)Order.Status.Completed].Full </label> </td> </tr>
+             </table>
+
             <br />
             <div class="form-group">
                 <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
@@ -52,13 +75,16 @@
                 @Html.DisplayNameFor(model => model.Orders.First().Id)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Orders.First().StatusName)
+                <a role="button" title="Статус" style="text-decoration:none">ℹ️</a>
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Orders.First().Shop)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Orders.First().Address)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Orders.First().FormattedWeight)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Orders.First().ProductsCost)
@@ -78,14 +104,14 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Orders.OrderBy(o => Math.Max((int)o.StatusId, (int)Order.Status.Refused))
+@foreach (var item in Model.Orders.OrderBy(o => o.StatusId == Order.Status.Refused ? Order.Status.Delivering : o.StatusId)
                                   .ThenByDescending(o => o.DeliveryTime ?? o.CreationTime ?? DateTime.MaxValue)) {
-        <tr>
+        <tr class=@item.StatusId>
             <td>
-                <a asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem => item.Id)</a>
+                <a asp-action="Details" asp-route-id="@item.Id" style="text-decoration:none">@Html.DisplayFor(modelItem => item.Id)</a>
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.StatusName)
+                <a role="button" title="@item.StatusName.Name">@item.StatusName.Icon</a>
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Shop.NameWithAddress)
@@ -93,13 +119,16 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Address)
             </td>
-            <td>
+            <td style="width: 0%; white-space: nowrap">
+                @Html.DisplayFor(modelItem => item.FormattedWeight)
+            </td>
+            <td style="width: 0%; white-space: nowrap">
                 @Html.DisplayFor(modelItem => item.ProductsCost)
             </td>
-            <td>
+            <td style="width: 0%; white-space: nowrap">
                 @Html.DisplayFor(modelItem => item.DeliveryPrice)
             </td>
-            <td>
+            <td style="width: 0%; white-space: nowrap">
                 @Html.DisplayFor(modelItem => item.TotalCost)
             </td>
             <td>

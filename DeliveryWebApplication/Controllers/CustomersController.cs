@@ -18,7 +18,7 @@ namespace DeliveryWebApplication.Controllers
         public CustomersController(DeliveryContext context)
         {
             _context = context;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            Utils.SetCulture();
         }
 
         // GET: Customers

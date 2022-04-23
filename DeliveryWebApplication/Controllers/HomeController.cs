@@ -12,7 +12,7 @@ namespace DeliveryWebApplication.Controllers
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            Utils.SetCulture();
         }
 
         public IActionResult Index()

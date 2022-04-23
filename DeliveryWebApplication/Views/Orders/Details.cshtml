@@ -1,72 +1,131 @@
 ﻿@model DeliveryWebApplication.Order
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Замовлення";
 }
 
-<h1>Details</h1>
+<h1>Замовлення</h1>
+
+<style>
+    .Creating   { background: #ffffff }
+    .Delivering { background: #f0f0ff }
+    .Waiting    { background: #fffff0 }
+    .Refused    { background: #fff0f0 }
+    .Completed  { background: #f0fff0 }
+</style>
 
 <div>
-    <h4>Order</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DeliveryPrice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DeliveryPrice)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreationTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreationTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DeliveryTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DeliveryTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Address)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Address)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CustomerComment)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CustomerComment)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CourierComment)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CourierComment)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Courier)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Courier.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Customer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Customer.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Shop)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Shop.Id)
-        </dd>
+    <dl class="@("row " + Model.StatusId)">
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.StatusName) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.StatusName.Full) </dd>
+
+            <hr />
+
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Customer) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Customer.NameWithPhone) </dd>
+        
+        @if(Model.Courier is not null)
+        {
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Courier) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Courier.NameWithPhone) </dd>
+        }
+
+            <hr />
+        
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Shop) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Shop.NameWithAddress) </dd>
+        
+        @if(Model.CreationTime is not null)
+        {
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Address) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Address) </dd>
+        }
+
+            <hr />
+
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.FormattedWeight) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.FormattedWeight) </dd>
+
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.ProductsCost) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.ProductsCost) </dd>
+
+        @if(Model.CreationTime is not null)
+        {
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.DeliveryPrice) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.DeliveryPrice) </dd>
+
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.TotalCost) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.TotalCost) </dd>
+
+            <hr />
+        
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.CreationTime) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.CreationTime) </dd>
+        }
+        
+        @if(Model.DeliveryTime is not null)
+        {
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.DeliveryTime) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.DeliveryTime) </dd>
+        }
+
+            <hr />
+        
+        @if(Model.CreationTime is not null)
+        {
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.CustomerComment) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.CustomerComment) </dd>
+        }
+
+        @if(Model.CourierComment is not null)
+        {
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.CourierComment) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.CourierComment) </dd>
+        }
     </dl>
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
+
+
+<hr />
+
+<h4>Пункти замовлення:</h4>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.OrderItems.FirstOrDefault().ProductInShop)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OrderItems.FirstOrDefault().FormattedWeight)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OrderItems.FirstOrDefault().Cost)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.OrderItems) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductInShop.Product.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FormattedWeight)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Cost)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-controller="OrderItems" asp-route-id="@item.Id">Змінити @(item.ProductInShop.Product.Weight is null ? "вагу" : "кількість")</a> |
+                <a asp-action="Delete" asp-controller="OrderItems" asp-route-id="@item.Id">Видалити з замовлення</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
