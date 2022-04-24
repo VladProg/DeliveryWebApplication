@@ -1,10 +1,10 @@
-﻿@model DeliveryWebApplication.Order
+﻿@model DeliveryWebApplication.Controllers.OrdersController.DetailsInfo
 
 @{
-    ViewData["Title"] = "Замовлення";
+    ViewData["Title"] = "Замовлення #" + Model.Order.Id;
 }
 
-<h1>Замовлення</h1>
+<h1>Замовлення #@Model.Order.Id</h1>
 
 <style>
     .Creating   { background: #ffffff }
@@ -13,80 +13,79 @@
     .Refused    { background: #fff0f0 }
     .Completed  { background: #f0fff0 }
 </style>
-
+<br />
 <div>
-    <dl class="@("row " + Model.StatusId)">
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.StatusName) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.StatusName.Full) </dd>
+    <dl class="@("row " + Model.Order.StatusId)">
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.StatusName) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.StatusName.Full) </dd>
 
             <hr />
 
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Customer) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Customer.NameWithPhone) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.Customer) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.Customer.NameWithPhone) </dd>
         
-        @if(Model.Courier is not null)
+        @if(Model.Order.Courier is not null)
         {
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Courier) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Courier.NameWithPhone) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.Courier) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.Courier.NameWithPhone) </dd>
         }
 
             <hr />
         
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Shop) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Shop.NameWithAddress) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.Shop) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.Shop.NameWithAddress) </dd>
         
-        @if(Model.CreationTime is not null)
+        @if(Model.Order.CreationTime is not null)
         {
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Address) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Address) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.Address) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.Address) </dd>
         }
 
             <hr />
 
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.FormattedWeight) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.FormattedWeight) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.FormattedWeight) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.FormattedWeight) </dd>
 
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.ProductsCost) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.ProductsCost) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.ProductsCost) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.ProductsCost) </dd>
 
-        @if(Model.CreationTime is not null)
+        @if(Model.Order.CreationTime is not null)
         {
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.DeliveryPrice) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.DeliveryPrice) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.DeliveryPrice) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.DeliveryPrice) </dd>
 
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.TotalCost) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.TotalCost) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.TotalCost) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.TotalCost) </dd>
 
             <hr />
         
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.CreationTime) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.CreationTime) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.CreationTime) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.CreationTime) </dd>
         }
         
-        @if(Model.DeliveryTime is not null)
+        @if(Model.Order.DeliveryTime is not null)
         {
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.DeliveryTime) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.DeliveryTime) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.DeliveryTime) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.DeliveryTime) </dd>
         }
 
             <hr />
         
-        @if(Model.CreationTime is not null)
+        @if(Model.Order.CreationTime is not null)
         {
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.CustomerComment) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.CustomerComment) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.CustomerComment) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.CustomerComment) </dd>
         }
 
-        @if(Model.CourierComment is not null)
+        @if(Model.Order.CourierComment is not null)
         {
-            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.CourierComment) </dt>
-            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.CourierComment) </dd>
+            <dt class = "col-sm-2"> @Html.DisplayNameFor(model => model.Order.CourierComment) </dt>
+            <dd class = "col-sm-10"> @Html.DisplayFor(model => model.Order.CourierComment) </dd>
         }
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">Повернутися до списку замовлень</a>
 </div>
 
 
@@ -98,32 +97,67 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.OrderItems.FirstOrDefault().ProductInShop)
+                @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().ProductInShop)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.OrderItems.FirstOrDefault().FormattedWeight)
+                @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().ProductInShop.FormattedPrice)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.OrderItems.FirstOrDefault().Cost)
+                @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().Count)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().Cost)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.OrderItems) {
+@foreach (var item in Model.Order.OrderItems) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.ProductInShop.Product.Name)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.FormattedWeight)
+                @Html.DisplayFor(modelItem => item.ProductInShop.FormattedPrice)
+            </td>
+            <td>
+                @if(Model.Order.CreationTime is null)
+                {
+                    <form asp-action="Details">
+                        <input type="hidden" asp-for="OrderItem.Id" value=@item.Id />
+                        <table><tr>
+                            @if(item.ProductInShop.Product.Weight is null)
+                            {
+                                <td width=100px>
+                                    <input asp-for="OrderItem.Weight" class="form-control" onkeypress=@(@"return /[0-9.]/i.test(event.key)") value=@item.Weight?.ToString("n3")/>
+                                </td>
+                                <td>&nbsp;кг&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                            }
+                            else
+                            {
+                                <td width=100px>
+                                    <input asp-for="OrderItem.Count" class="form-control" onkeypress=@(@"return /[0-9]/i.test(event.key)") value=@item.Count.ToString()/>
+                                </td>
+                                <td>&nbsp;шт.&nbsp;&nbsp;&nbsp;</td>
+                            }
+                            <td><input type="submit" value="Зберегти" class="btn btn-primary" /></td>
+                        </tr></table>
+                    </form>
+                }
+                else
+                {
+                    @Html.DisplayFor(modelItem => item.FormattedWeight)
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Cost)
             </td>
             <td>
-                <a asp-action="Edit" asp-controller="OrderItems" asp-route-id="@item.Id">Змінити @(item.ProductInShop.Product.Weight is null ? "вагу" : "кількість")</a> |
-                <a asp-action="Delete" asp-controller="OrderItems" asp-route-id="@item.Id">Видалити з замовлення</a>
+                <form asp-action="Details">
+                    <input type="hidden" asp-for="OrderItem.Id" value=@item.Id />
+                    <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
+                    <input type="submit" value="Видалити з замовлення" class="btn btn-danger" />
+                </form>
             </td>
         </tr>
 }

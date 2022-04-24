@@ -22,16 +22,18 @@ namespace DeliveryWebApplication
 
         [Display(Name = "Вага")]
         [NotMapped]
-        public decimal Weight
+        [Range(0, 100, ErrorMessage = "Вага повинна бути в межах від 0 до 100 кілограмів")]
+        [RegularExpression(@"\d+(\.\d+)?", ErrorMessage = "Введіть коректне число")]
+        public decimal? Weight
         {
-            get => ProductInShop is null ? -2 : ProductInShop.Product.Weight is decimal w ? w * Count : (decimal)Count / 1000;
-            set => Count = (int)value * 1000;
+            get => ProductInShop is not null && ProductInShop.Product.Weight is decimal w ? w * Count : (decimal)Count / 1000;
+            set => Count = (int)((value ?? 0) * 1000);
         }
 
         [Display(Name = "Вага")]
         public string FormattedWeight => ProductInShop is null ? "?" :
             ProductInShop.Product.Weight is decimal ?
-                ProductInShop.Product.FormattedWeight + " × " + Count :
+                Count + " шт." :
                 Utils.FormattedWeight(Count);
     }
 }

@@ -1,7 +1,7 @@
-﻿@model DeliveryWebApplication.Product
+﻿@model DeliveryWebApplication.Controllers.ProductsController.DetailsInfo
 
 @{
-    ViewData["Title"] = @Html.DisplayFor(model => model.Name);
+    ViewData["Title"] = @Html.DisplayFor(model => model.Product.Name);
 }
 
 <h1>Продукт</h1>
@@ -11,40 +11,40 @@
 <div>
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
+            @Html.DisplayNameFor(model => model.Product.Name)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
+            @Html.DisplayFor(model => model.Product.Name)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FormattedWeight)
+            @Html.DisplayNameFor(model => model.Product.FormattedWeight)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FormattedWeight)
+            @Html.DisplayFor(model => model.Product.FormattedWeight)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Trademark)
+            @Html.DisplayNameFor(model => model.Product.Trademark)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Trademark.Name)
+            @Html.DisplayFor(model => model.Product.Trademark.Name)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
+            @Html.DisplayNameFor(model => model.Product.Category)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category.Name)
+            @Html.DisplayFor(model => model.Product.Category.Name)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Country)
+            @Html.DisplayNameFor(model => model.Product.Country)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Country.Name)
+            @Html.DisplayFor(model => model.Product.Country.Name)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Prices)
+            @Html.DisplayNameFor(model => model.Product.Prices)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Prices)
+            @Html.DisplayFor(model => model.Product.Prices)
         </dd>
     </dl>
 </div>
@@ -52,16 +52,16 @@
 <hr />
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Редагувати</a> |
-    @if(!Model.HasAlive)
+    <a asp-action="Edit" asp-route-id="@Model.Product.Id">Редагувати</a> |
+    @if(!Model.Product.HasAlive)
     {
-        <a asp-action="Delete" asp-route-id="@Model?.Id">Видалити</a> <text> | </text>
+        <a asp-action="Delete" asp-route-id="@Model.Product.Id">Видалити</a> <text> | </text>
     }
-    <a asp-action="Create" asp-controller="ProductsInShops" asp-route-productId="@Model?.Id" asp-route-productName="@Model?.Name" asp-route-isPerKg="@(Model.Weight is null)">Додати в магазин</a> |
+    <a asp-action="Create" asp-controller="ProductsInShops" asp-route-productId="@Model.Product.Id" asp-route-productName="@Model.Product.Name" asp-route-isPerKg="@(Model.Product.Weight is null)">Додати в магазин</a> |
     <a asp-action="Index">Повернутися до списку продуктів</a>
 </div>
 
-@if(Model.HasAlive)
+@if(Model.Product.HasAlive)
 {
     <text> Щоб видалити продукт, спочатку видаліть його з усіх магазинів. </text>
 }
@@ -74,19 +74,20 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.ProductsInShops.FirstOrDefault().Shop.Name)
+                @Html.DisplayNameFor(model => model.Product.ProductsInShops.FirstOrDefault().Shop.Name)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ProductsInShops.FirstOrDefault().Shop.Address)
+                @Html.DisplayNameFor(model => model.Product.ProductsInShops.FirstOrDefault().Shop.Address)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ProductsInShops.FirstOrDefault().FormattedPrice)
+                @Html.DisplayNameFor(model => model.Product.ProductsInShops.FirstOrDefault().FormattedPrice)
             </th>
-            <th></th>
+            <th width=30%></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.ProductsInShops.Alive()) {
+@{var items=Model.Product.ProductsInShops.Alive().OrderBy(item=>item.ShopId==TempData.Peek("ShopId") as int? ? 0 : 1);
+@foreach (var item in items) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Shop.Name)
@@ -99,10 +100,72 @@
             </td>
             <td>
                 <a asp-action="Edit" asp-controller="ProductsInShops" asp-route-id="@item.Id">Змінити ціну</a> |
-                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазина</a> |
-                <a asp-action="Create" asp-controller="OrderItems" asp-route-productInShopId="@item.Id" asp-route-shopId="@item.ShopId" asp-route-shopName="@item.Shop.NameWithAddress" asp-route-productId="@item.ProductId" asp-route-productName="@item.Product.Name" asp-route-price="@item.FormattedPrice" asp-route-productWeight="@item.Product.FormattedWeight">Додати до замовлення</a>
+                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазина</a>
+                @if(TempData.Peek("CustomerId") is not null and not 0 &&
+                    !item.Shop.Orders.Any(o=>o.CustomerId==(int)TempData.Peek("CustomerId")&&o.CreationTime is not null&&o.DeliveryTime is null))
+                {
+                    OrderItem oi = null;
+                    <form asp-action="Details">
+                        <input type="hidden" asp-for="OrderItem.ProductInShopId" value=@item.Id />
+                        @{
+                            <br />
+                            if(item.Shop.Orders.Where(o=>o.CustomerId==(int)TempData.Peek("CustomerId")&&o.CreationTime is null).FirstOrDefault() is Order o)
+                                oi = o.OrderItems.Where(oi=>oi.ProductInShopId==item.Id).FirstOrDefault() as OrderItem;
+                            if(oi is not null)
+                            {
+                                <text>Змінити в </text>
+                                <a asp-action="Details" asp-controller="Orders" asp-route-id="@oi.OrderId">замовленні</a>
+                            }
+                            else
+                            {
+                                <text>Додати до замовлення</text>
+                            }
+                            if(Model.Product.Weight is null)
+                            {
+                                <text> вагу (кг)</text>
+                                <br />
+                            }
+                            else
+                            {
+                                <text> кількість</text>
+                                <br />
+                            }
+                            <table><tr>
+                            <td width=100px>
+                            @if(Model.Product.Weight is null)
+                            {
+                                <input asp-for="OrderItem.Weight" class="form-control" onkeypress=@(@"return /[0-9.]/i.test(event.key)") value=@(oi is null ? "" : oi.Weight?.ToString("n3"))/>
+                            }
+                            else
+                            {
+                                <input asp-for="OrderItem.Count" class="form-control" onkeypress=@(@"return /[0-9]/i.test(event.key)") value=@(oi is null ? "" : oi.Count.ToString())/>
+                            }
+                            </td>
+                            <td><input type="submit" value="Зберегти" class="btn btn-primary" /></td>
+                            </tr></table>
+                        }
+                     </form>
+                    if(oi is not null)
+                    {
+                        <form asp-action="Details">
+                            <input type="hidden" asp-for="OrderItem.ProductInShopId" value=@item.Id />
+                            <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
+                            <input type="submit" value="Видалити з замовлення" class="btn btn-danger" />
+                        </form>
+                    }
+                }
             </td>
         </tr>
+        @if(item.ShopId==TempData.Peek("ShopId") as int? && items.Count()>1)
+        {
+            <tr>
+                <td colspan=4> <b> <i>
+                <br/>
+                    Цей продукт в інших магазинах:
+                </i> </b> </td>
+            </tr>
+        }
+}
 }
     </tbody>
 </table>

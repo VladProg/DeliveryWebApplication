@@ -94,7 +94,7 @@ namespace DeliveryWebApplication
         public decimal? TotalCost => ProductsCost + DeliveryPrice;
 
         [Display(Name = "Вага")]
-        public decimal Weight => OrderItems.Sum(oi => oi.Weight);
+        public decimal Weight => OrderItems.Sum(oi => (decimal)oi.Weight);
         [Display(Name = "Вага")]
         public string FormattedWeight => Utils.FormattedWeight(Weight);
 

@@ -98,6 +98,12 @@ namespace DeliveryWebApplication.Controllers
             return await Index();
         }
 
+        public class DetailsInfo
+        {
+            public Product Product { get; set; }
+            public OrderItem OrderItem { get; set; }
+        }
+
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -112,13 +118,77 @@ namespace DeliveryWebApplication.Controllers
                 .Include(p => p.Trademark)
                 .Include(p => p.ProductsInShops)
                 .ThenInclude(p => p.Shop)
+                .ThenInclude(p => p.Orders)
+                .ThenInclude(p => p.OrderItems)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            return View(product);
+            return View(new DetailsInfo { Product = product });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Details(int id, DetailsInfo info)
+        {
+            if (!ModelState.IsValid)
+                return await Details(id);
+
+            int customerId = (int)TempData.Peek("CustomerId");
+            int productInShopId = info.OrderItem.ProductInShopId;
+            int shopId = (await _context.ProductsInShops.FindAsync(productInShopId)).ShopId;
+            var order = _context.Orders.Include(o=>o.OrderItems).FirstOrDefault(o => o.CustomerId == customerId && o.ShopId == shopId && o.CreationTime == null);
+            if (order == null)
+            {
+                order = new Order();
+                order.CustomerId = customerId;
+                order.ShopId = shopId;
+                order.Address = "";
+                order.CustomerComment = "";
+                try
+                {
+                    _context.Add(order);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return NotFound();
+                }
+            }
+
+            var orderItem = order.OrderItems.Where(oi => oi.OrderId == order.Id && oi.ProductInShopId == productInShopId).FirstOrDefault();
+            if (orderItem == null)
+            {
+                orderItem = new OrderItem();
+                orderItem.OrderId = order.Id;
+                orderItem.ProductInShopId = productInShopId;
+                _context.Add(orderItem);
+            }
+            orderItem.Count = info.OrderItem.Count;
+            if(orderItem.Count == 0)
+                _context.Remove(orderItem);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return NotFound();
+            }
+            if ((await _context.Orders.Include(o => o.OrderItems).FirstOrDefaultAsync(o => o.Id == order.Id)).OrderItems.Count == 0)
+                try
+                {
+                    _context.Remove(order);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return NotFound();
+                }
+
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         public class CreateInfo

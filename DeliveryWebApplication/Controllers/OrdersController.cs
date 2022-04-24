@@ -31,7 +31,7 @@ namespace DeliveryWebApplication.Controllers
             IEnumerable<Order> deliveryContext = _context.Orders.Include(p => p.Courier).Include(p => p.Customer).Include(p => p.Shop).Include(p => p.OrderItems).ThenInclude(item => item.ProductInShop).ThenInclude(pis => pis.Product);
             var customer = await _context.Customers.Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.CustomerId);
             var courier = await _context.Couriers.Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.CourierId);
-            var shop = await _context.Shops.Alive().Include(t => t.Orders).FirstOrDefaultAsync(t => t.Id == Filter.ShopId);
+            var shop = await _context.Shops.Alive().Include(t => t.Orders).Include(t => t.ProductsInShops).FirstOrDefaultAsync(t => t.Id == Filter.ShopId);
             if (customer is null) Filter.CustomerId = 0;
             if (courier is null) Filter.CourierId = 0;
             if (shop is null || !shop.Orders.Any() && !shop.ProductsInShops.Any(y => !y.Deleted)) Filter.ShopId = 0;
@@ -116,6 +116,12 @@ namespace DeliveryWebApplication.Controllers
             return await Index();
         }
 
+        public class DetailsInfo
+        {
+            public Order Order { get; set; }
+            public OrderItem OrderItem { get; set; }
+        }
+
         // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -137,7 +143,43 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
-            return View(order);
+            return View(new DetailsInfo { Order = order });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Details(int id, DetailsInfo info)
+        {
+
+            if (!ModelState.IsValid)
+                return await Details(id);
+
+            var order = await _context.Orders.FindAsync(id);
+            var orderItem = await _context.OrderItems.FindAsync(info.OrderItem.Id);
+            orderItem.Count = info.OrderItem.Count;
+            if (orderItem.Count == 0)
+                _context.Remove(orderItem);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return NotFound();
+            }
+            if ((await _context.Orders.Include(o=>o.OrderItems).FirstOrDefaultAsync(o=>o.Id==order.Id)).OrderItems.Count == 0)
+                try
+                {
+                    _context.Remove(order);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return NotFound();
+                }
+
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         // GET: Orders/Create
