@@ -1,13 +1,11 @@
 ﻿@model DeliveryWebApplication.Customer
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Додати клієнта";
 }
 
-<h1>Create</h1>
-
-<h4>Customer</h4>
-<hr />
+<h4>Додати клієнта</h4>
+<br />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
@@ -19,18 +17,19 @@
             </div>
             <div class="form-group">
                 <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
+                <input asp-for="Phone" onkeypress="return /[0-9+]/i.test(event.key)" class="form-control" value="+380" />
                 <span asp-validation-for="Phone" class="text-danger"></span>
             </div>
+            <br/>
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Створити" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
-
+<br />
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">Повернутися до списку клієнтів</a>
 </div>
 
 @section Scripts {

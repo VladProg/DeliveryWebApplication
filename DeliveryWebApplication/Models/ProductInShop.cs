@@ -18,7 +18,7 @@ namespace DeliveryWebApplication
         public int ShopId { get; set; }
         [Display(Name = "Ціна")]
         [Required(ErrorMessage = "Введіть ціну")]
-        [Range(0.01, 1000000, ErrorMessage = "Вага повинна бути в межах від 0.01 до 1000000 гривень")]
+        [Range(0.01, 1000000, ErrorMessage = "Ціна повинна бути в межах від 0.01 до 1000000 гривень")]
         [RegularExpression(@"\d+(\.\d+)?", ErrorMessage = "Введіть коректне число")]
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
         public decimal Price { get; set; }

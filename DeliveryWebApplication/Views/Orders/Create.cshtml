@@ -1,35 +1,48 @@
 ﻿@model DeliveryWebApplication.Order
 
 @{
-    ViewData["Title"] = "Створити замовлення";
+    ViewData["Title"] = "Підтвердити замовлення";
 }
 
-<h4>Створити замовлення</h4>
-<br />
+<h1>Підтвердити замовлення <b>#@Model.Id</b></h1>
+<h1>в магазині "<b>@Model.Shop.NameWithAddress</b>"</h1>
+<h1>на суму <b>@Model.ProductsCost.ToString("n2") ₴</b></h1>
+
+<hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
             <div class="form-group">
-                <label asp-for="CustomerId" class="control-label"></label>
-                <select asp-for="CustomerId" class ="form-control" asp-items="ViewBag.CustomerId"><option/></select>
-                <span asp-validation-for="CustomerId" class="text-danger"></span>
+                Оберіть ціну доставки (в гривнях)
+                <br />
+                Мінімальна ціна доставки: @Order.MINIMAL_DELIVERY_PRICE ₴
+                <br />
+                Рекомендована ціна доставки: @((decimal)ViewData["Median"]) ₴
+                <input asp-for="DeliveryPrice" class="form-control" onkeypress="return /[0-9\.]/i.test(event.key)" value=@((decimal)ViewData["Median"]) />
+                <span asp-validation-for="DeliveryPrice" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ShopId" class="control-label"></label>
-                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
-                <span asp-validation-for="ShopId" class="text-danger"></span>
+                Введіть адресу, куди потрібно доставити замовлення
+                <input asp-for="Address" class="form-control" />
+                <span asp-validation-for="Address" class="text-danger"></span>
             </div>
-            <br/>
             <div class="form-group">
-                <input type="submit" value="Створити" class="btn btn-primary" />
+                Можете залишити будь-який коментар кур'єру
+                <input asp-for="CustomerComment" class="form-control" />
+                <span asp-validation-for="CustomerComment" class="text-danger"></span>
+            </div>
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Підтвердити" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 <br />
 <div>
-    <a asp-action="Index">Повернутися до списку замовлень</a>
+    <a asp-action="Details" asp-route-id=@Model.Id>Повернутися до замовлення</a>
 </div>
 
 @section Scripts {

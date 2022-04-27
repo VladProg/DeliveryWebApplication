@@ -22,12 +22,20 @@ namespace DeliveryWebApplication
 
         [Display(Name = "Вага")]
         [NotMapped]
-        [Range(0, 100, ErrorMessage = "Вага повинна бути в межах від 0 до 100 кілограмів")]
+        [Range(0.0, 100.0, ErrorMessage = "Вага повинна бути в межах від 0 до 100 кілограмів")]
         [RegularExpression(@"\d+(\.\d+)?", ErrorMessage = "Введіть коректне число")]
         public decimal? Weight
         {
             get => ProductInShop is not null && ProductInShop.Product.Weight is decimal w ? w * Count : (decimal)Count / 1000;
-            set => Count = (int)((value ?? 0) * 1000);
+            set
+            {
+                decimal res = (value ?? 0) * 1000;
+                if (res > 1000000000)
+                    res = 1000000000;
+                if (res < -1000000000)
+                    res = -1000000000;
+                Count = (int)res;
+            }
         }
 
         [Display(Name = "Вага")]

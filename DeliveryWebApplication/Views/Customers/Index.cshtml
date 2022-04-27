@@ -1,14 +1,17 @@
 ﻿@model IEnumerable<DeliveryWebApplication.Customer>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Клієнти";
 }
 
-<h1>Index</h1>
+<h1>Клієнти</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create">Додати клієнта</a>
+    | <a asp-controller="Orders" asp-action="Index">Повернутися до списку замовлень</a>
 </p>
+<br />
+<br />
 <table class="table">
     <thead>
         <tr>
@@ -22,7 +25,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.OrderBy(item=>item.Phone)) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
@@ -31,9 +34,7 @@
                 @Html.DisplayFor(modelItem => item.Phone)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
             </td>
         </tr>
 }

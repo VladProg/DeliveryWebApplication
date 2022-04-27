@@ -12,6 +12,10 @@ namespace DeliveryWebApplication
             OrderItems = new HashSet<OrderItem>();
         }
 
+        public const decimal MINIMAL_DELIVERY_PRICE = 10;
+        public const decimal MAXIMAL_DELIVERY_PRICE = 1000000;
+        public const string DELIVERY_PRICE_MESSAGE = "Ціна повинна бути в межах від 10 до 1000000 гривень";
+
         [Display(Name = "Номер")]
         public int Id { get; set; }
         [Display(Name = "Клієнт")]
@@ -24,6 +28,8 @@ namespace DeliveryWebApplication
         public int ShopId { get; set; }
         [Display(Name = "Ціна доставки")]
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
+        [Range((double)MINIMAL_DELIVERY_PRICE, (double)MAXIMAL_DELIVERY_PRICE, ErrorMessage = DELIVERY_PRICE_MESSAGE)]
+        [RegularExpression(@"\d+(\.\d+)?", ErrorMessage = "Введіть коректне число")]
         public decimal? DeliveryPrice { get; set; }
         [Display(Name = "Час створення")]
         [DisplayFormat(DataFormatString = "{0:dd.MM.yy HH:mm:ss}")]
@@ -32,6 +38,7 @@ namespace DeliveryWebApplication
         [Display(Name = "Час доставки")]
         public DateTime? DeliveryTime { get; set; }
         [Display(Name = "Адреса доставки")]
+        [Required(ErrorMessage = "Введіть адресу")]
         public string Address { get; set; }
         [Display(Name = "Коментар клієнта")]
         public string CustomerComment { get; set; }
@@ -53,8 +60,8 @@ namespace DeliveryWebApplication
             get
             {
                 if (CreationTime is null) return Status.Creating;
-                if (CourierId is null && CourierComment is null) return Status.Waiting;
-                if (CourierId is null) return Status.Refused;
+                if (CourierComment is not null) return Status.Refused;
+                if (CourierId is null) return Status.Waiting;
                 if (DeliveryTime is null) return Status.Delivering;
                 return Status.Completed;
             }

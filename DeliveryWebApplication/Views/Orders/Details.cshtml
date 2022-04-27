@@ -85,6 +85,11 @@
     </dl>
 </div>
 <div>
+    @if(Model.Order.StatusId is Order.Status.Creating && (int?)TempData.Peek("CustomerId") == Model.Order.CustomerId) { <a asp-action="Create" asp-route-id=@Model.Order.Id>Підтвердити замовлення</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Waiting or Order.Status.Refused && (int?)TempData.Peek("CustomerId") == Model.Order.CustomerId) { <a asp-action="Cancel" asp-route-id=@Model.Order.Id>Відмінити замовлення</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Waiting or Order.Status.Refused && TempData.Peek("CourierId") is not null and not 0) { <a asp-action="Deliver" asp-route-id=@Model.Order.Id>Доставити це замовлення</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Delivering && (int?)TempData.Peek("CourierId") == Model.Order.CourierId) { <a asp-action="Refuse" asp-route-id=@Model.Order.Id>Відмінити доставку</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Delivering && (int?)TempData.Peek("CourierId") == Model.Order.CourierId) { <a asp-action="Done" asp-route-id=@Model.Order.Id>Доставлено</a> <text>|</text> }
     <a asp-action="Index">Повернутися до списку замовлень</a>
 </div>
 
@@ -153,11 +158,14 @@
                 @Html.DisplayFor(modelItem => item.Cost)
             </td>
             <td>
-                <form asp-action="Details">
-                    <input type="hidden" asp-for="OrderItem.Id" value=@item.Id />
-                    <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
-                    <input type="submit" value="Видалити з замовлення" class="btn btn-danger" />
-                </form>
+                @if(Model.Order.CreationTime is null)
+                {
+                    <form asp-action="Details">
+                        <input type="hidden" asp-for="OrderItem.Id" value=@item.Id />
+                        <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
+                        <input type="submit" value="Видалити з замовлення" class="btn btn-danger" />
+                    </form>
+                }
             </td>
         </tr>
 }

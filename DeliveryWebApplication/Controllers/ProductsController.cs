@@ -133,6 +133,20 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Details(int id, DetailsInfo info)
         {
+            var product = await _context.Products.FindAsync(id);
+            if(product.Weight is null)
+            {
+                if (info.OrderItem.Weight > 100)
+                    info.OrderItem.Weight = 100;
+            }
+            else
+            {
+                if (info.OrderItem.Count > 100)
+                    info.OrderItem.Count = 100;
+            }
+            if (info.OrderItem.Count < 0)
+                info.OrderItem.Count = 0;
+
             if (!ModelState.IsValid)
                 return await Details(id);
 

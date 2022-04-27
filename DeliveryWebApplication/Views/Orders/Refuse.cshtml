@@ -1,0 +1,37 @@
+﻿@model DeliveryWebApplication.Order
+
+@{
+    ViewData["Title"] = "Відмінити доставку";
+}
+
+<h1>Відмінити доставку замовлення <b>#@Model.Id</b></h1>
+<h1>в магазині "<b>@Model.Shop.NameWithAddress</b>"</h1>
+<h1>на суму <b>@Model.ProductsCost.ToString("n2") ₴</b></h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Refuse">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Address" />
+            <div class="form-group">
+                Чому ви хочете відмінити доставку?
+                <input asp-for="CourierComment" class="form-control" />
+                <span asp-validation-for="CourierComment" class="text-danger"></span>
+            </div>
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Підтвердити" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+<br />
+<div>
+    <a asp-action="Details" asp-route-id=@Model.Id>Повернутися до замовлення</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

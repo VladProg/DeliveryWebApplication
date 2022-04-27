@@ -58,6 +58,8 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Phone")] Customer customer)
         {
+            if (_context.Customers.Any(s => s.Phone == customer.Phone))
+                ModelState.AddModelError("Phone", "Клієнт з таким номером телефона вже зареєестрований");
             if (ModelState.IsValid)
             {
                 _context.Add(customer);
@@ -95,6 +97,8 @@ namespace DeliveryWebApplication.Controllers
                 return NotFound();
             }
 
+            if (_context.Customers.Any(s => s.Phone == customer.Phone && s.Id != customer.Id))
+                ModelState.AddModelError("Phone", "Клієнт з таким номером телефона вже зареєестрований");
             if (ModelState.IsValid)
             {
                 try

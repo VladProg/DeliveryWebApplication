@@ -97,8 +97,8 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Orders.OrderBy(o => o.StatusId == Order.Status.Refused ? Order.Status.Delivering : o.StatusId)
-                                  .ThenByDescending(o => o.DeliveryTime ?? o.CreationTime ?? DateTime.MaxValue)) {
+@foreach (var item in Model.Orders.OrderBy(o => o.StatusId == Order.Status.Refused ? Order.Status.Waiting : o.StatusId)
+                                  .ThenByDescending(o => o.DeliveryTime-DateTime.MaxValue ?? DateTime.MaxValue-o.CreationTime ?? TimeSpan.MaxValue)) {
         <tr class=@item.StatusId>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id" style="text-decoration:none">@Html.DisplayFor(modelItem => item.Id)</a>
