@@ -10,14 +10,14 @@
     <a asp-action="Create">Створити магазин</a>
     @if((string)ViewData["Back"]=="Products")
     {
-        <text>|</text> <a asp-controller="Products" asp-action="Index">Повернутися до списку продуктів</a>
+        <text>|</text> <a asp-controller="Products" asp-action="Index">Повернутися до списку товарів</a>
     }
     else if((string)ViewData["Back"]=="Orders")
     {
         <text>|</text> <a asp-controller="Orders" asp-action="Index">Повернутися до списку замовлень</a>
     }
 </p>
-*Щоб видалити магазин, спочатку видаліть всі продукти з нього.
+*Щоб видалити магазин, спочатку видаліть всі товари з нього.
 <br />
 <br />
 <table class="table">

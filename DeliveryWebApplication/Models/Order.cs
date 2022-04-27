@@ -92,7 +92,7 @@ namespace DeliveryWebApplication
         [Display(Name = "Статус")]
         public IconWithName StatusName => STATUS_NAMES[(int)StatusId];
 
-        [Display(Name = "Вартість продуктів")]
+        [Display(Name = "Вартість товарів")]
         [DisplayFormat(DataFormatString = "{0:n2} ₴")]
         public decimal ProductsCost => OrderItems.Select(oi => oi.Cost).Sum();
 

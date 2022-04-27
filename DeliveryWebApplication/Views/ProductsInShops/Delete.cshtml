@@ -1,10 +1,10 @@
 ﻿@model DeliveryWebApplication.ProductInShop
 
 @{
-    ViewData["Title"] = "Видалити продукт з магазину";
+    ViewData["Title"] = "Видалити товар з магазину";
 }
 <br/>
-<h3>Ви дійсно хочете видалити продукт "<b>@ViewData["ProductName"]</b>"</h3>
+<h3>Ви дійсно хочете видалити товар "<b>@ViewData["ProductName"]</b>"</h3>
 <h3>з магазину "<b>@ViewData["ShopNameWithAddress"]</b>"</h3>
 <h3>за ціною <b>@Html.DisplayFor(model => model.FormattedPrice)</b>?</h3>
 <br/>
@@ -13,5 +13,5 @@
     <input type="submit" value="Видалити" class="btn btn-danger" />
     <br/>
     <br/>
-    <a asp-action="Details" asp-controller="Products" asp-route-id="@Model.ProductId">Повернутися до продукта</a>
+    <a asp-action="Details" asp-controller="Products" asp-route-id="@Model.ProductId">Повернутися до товара</a>
 </form>

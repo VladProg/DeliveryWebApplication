@@ -20,7 +20,7 @@ namespace DeliveryWebApplication
         public virtual ICollection<Product> Products { get; set; }
 
         public bool HasAlive => Products.Alive().Any();
-        [Display(Name = "Кількість продуктів")]
+        [Display(Name = "Кількість товарів")]
         public int CountAlive => Products.Alive().Count();
     }
 }

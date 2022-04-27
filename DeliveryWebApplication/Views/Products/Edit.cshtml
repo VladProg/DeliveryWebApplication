@@ -1,7 +1,7 @@
 ﻿@model DeliveryWebApplication.Controllers.ProductsController.CreateInfo
 
 @{
-    ViewData["Title"] = "Редагувати продукт";
+    ViewData["Title"] = "Редагувати товар";
 }
 
 <style>
@@ -13,7 +13,7 @@
 
 <table style="width:100%"> <tr>
     <td>
-        <h4>Редагувати продукт</h4>
+        <h4>Редагувати товар</h4>
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Product.Id" />
@@ -87,7 +87,7 @@
 </tr> </table>
 <br/><br/><br/>
 <div>
-    <a asp-action="Details" asp-route-id="@Model.Product.Id">Повернутися до продукта</a>
+    <a asp-action="Details" asp-route-id="@Model.Product.Id">Повернутися до товара</a>
 </div>
 
 @section Scripts {

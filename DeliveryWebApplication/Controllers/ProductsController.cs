@@ -235,7 +235,7 @@ namespace DeliveryWebApplication.Controllers
                                                    p.TrademarkId == info.Product.TrademarkId &&
                                                    p.CategoryId == info.Product.CategoryId &&
                                                    p.CountryId == info.Product.CountryId))
-                ModelState.AddModelError("", "Такий продукт вже існує");
+                ModelState.AddModelError("", "Такий товар вже існує");
             if (ModelState.IsValid)
             {
                 _context.Add(info.Product);
@@ -328,7 +328,7 @@ namespace DeliveryWebApplication.Controllers
                                                    p.CategoryId == info.Product.CategoryId &&
                                                    p.CountryId == info.Product.CountryId &&
                                                    p.Id != id))
-                ModelState.AddModelError("", "Такий продукт вже існує");
+                ModelState.AddModelError("", "Такий товар вже існує");
             if (ModelState.IsValid)
             {
                 try

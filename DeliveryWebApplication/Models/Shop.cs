@@ -38,7 +38,7 @@ namespace DeliveryWebApplication
         public string NameWithAddress => (Deleted ? "* " : "") + Name + " (" + Address + ")" + (Deleted ? " — цей магазин був видалений" : "");
 
         public bool HasAlive => ProductsInShops.Alive().Any();
-        [Display(Name = "Кількість продуктів")]
+        [Display(Name = "Кількість товарів")]
         public int CountAlive => ProductsInShops.Alive().Count();
     }
 }

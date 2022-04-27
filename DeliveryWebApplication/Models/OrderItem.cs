@@ -13,7 +13,7 @@ namespace DeliveryWebApplication
         public int Count { get; set; }
 
         public virtual Order Order { get; set; } = null!;
-        [Display(Name = "Продукт")]
+        [Display(Name = "Товар")]
         public virtual ProductInShop ProductInShop { get; set; } = null!;
 
         [Display(Name = "Вартість")]

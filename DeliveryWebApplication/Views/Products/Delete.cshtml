@@ -1,11 +1,11 @@
 ﻿@model DeliveryWebApplication.Product
 
 @{
-    ViewData["Title"] = "Видалити продукт";
+    ViewData["Title"] = "Видалити товар";
 }
 
 <div>
-    <h4>Ви дійсно хочете видалити продукт?</h4>
+    <h4>Ви дійсно хочете видалити товар?</h4>
     <dl class="row">
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Name)
@@ -42,6 +42,6 @@
     <form asp-action="Delete">
         <input type="hidden" asp-for="Id" />
         <input type="submit" value="Видалити" class="btn btn-danger" /> |
-        <a asp-action="Details" asp-route-id="@Model.Id">Повернутися до продукта</a>
+        <a asp-action="Details" asp-route-id="@Model.Id">Повернутися до товара</a>
     </form>
 </div>

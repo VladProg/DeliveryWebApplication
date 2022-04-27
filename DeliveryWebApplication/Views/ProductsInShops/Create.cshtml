@@ -1,10 +1,10 @@
 ﻿@model DeliveryWebApplication.ProductInShop
 
 @{
-    ViewData["Title"] = "Додати продукт в магазин";
+    ViewData["Title"] = "Додати товар в магазин";
 }
 
-<h4>Додати продукт "<b>@ViewData["ProductName"]</b>" в магазин</h4>
+<h4>Додати товар "<b>@ViewData["ProductName"]</b>" в магазин</h4>
 <br />
 <div class="row">
     <div class="col-md-4">
@@ -34,7 +34,7 @@
 </div>
 <br />
 <div>
-    <a asp-action="Details" asp-controller="Products" asp-route-id="@ViewData["ProductId"]">Повернутися до продукта</a>
+    <a asp-action="Details" asp-controller="Products" asp-route-id="@ViewData["ProductId"]">Повернутися до товара</a>
 </div>
 
 @section Scripts {

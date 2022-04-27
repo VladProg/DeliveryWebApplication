@@ -4,7 +4,7 @@
     ViewData["Title"] = @Html.DisplayFor(model => model.Product.Name);
 }
 
-<h1>Продукт</h1>
+<h1>Товар</h1>
 
 <hr />
 
@@ -58,12 +58,12 @@
         <a asp-action="Delete" asp-route-id="@Model.Product.Id">Видалити</a> <text> | </text>
     }
     <a asp-action="Create" asp-controller="ProductsInShops" asp-route-productId="@Model.Product.Id" asp-route-productName="@Model.Product.Name" asp-route-isPerKg="@(Model.Product.Weight is null)">Додати в магазин</a> |
-    <a asp-action="Index">Повернутися до списку продуктів</a>
+    <a asp-action="Index">Повернутися до списку товарів</a>
 </div>
 
 @if(Model.Product.HasAlive)
 {
-    <text> Щоб видалити продукт, спочатку видаліть його з усіх магазинів. </text>
+    <text> Щоб видалити товар, спочатку видаліть його з усіх магазинів. </text>
 }
 
 <hr />
@@ -161,7 +161,7 @@
             <tr>
                 <td colspan=4> <b> <i>
                 <br/>
-                    Цей продукт в інших магазинах:
+                    Цей товар в інших магазинах:
                 </i> </b> </td>
             </tr>
         }
