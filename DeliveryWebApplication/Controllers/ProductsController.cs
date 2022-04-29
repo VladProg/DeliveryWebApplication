@@ -263,9 +263,9 @@ namespace DeliveryWebApplication.Controllers
                 ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", entity.Id);
                 return View(nameof(Create), info);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
-            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
             return View(nameof(Create), info);
         }
 
@@ -284,9 +284,9 @@ namespace DeliveryWebApplication.Controllers
                 ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
                 return View(nameof(Create), info);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name");
-            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name");
-            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
+            ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
+            ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
             return View(nameof(Create), info);
         }
 

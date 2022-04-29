@@ -7,7 +7,7 @@
 <h1>Магазини</h1>
 
 <p>
-    <a asp-action="Create">Створити магазин</a>
+    <a asp-action="Create" asp-route-back="@ViewData["Back"]">Створити магазин</a>
     @if((string)ViewData["Back"]=="Products")
     {
         <text>|</text> <a asp-controller="Products" asp-action="Index">Повернутися до списку товарів</a>
@@ -60,11 +60,11 @@
                 @Html.DisplayFor(modelItem => item.CountAlive)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
+                <a asp-action="Edit" asp-route-id="@item.Id" asp-route-back="@ViewData["Back"]">Редагувати</a>
                 @if(!item.HasAlive)
                 {
                     <text> | </text>
-                    <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" asp-route-back="@ViewData["Back"]">Видалити</a>
                 }
             </td>
         </tr>

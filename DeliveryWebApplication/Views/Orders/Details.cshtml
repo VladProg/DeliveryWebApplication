@@ -107,8 +107,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().ProductInShop.FormattedPrice)
             </th>
+            <th></th>
             <th>
-                @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().Count)
+                @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().FormattedWeight)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Order.OrderItems.FirstOrDefault().Cost)
@@ -124,6 +125,12 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.ProductInShop.FormattedPrice)
+            </td>
+            <td align="right">
+                @if(Model.Order.CreationTime is null && item.ProductInShop.Product.Weight is not null)
+                {
+                    @item.ProductInShop.Product.FormattedWeight <text>&nbsp;&nbsp;×</text>
+                }
             </td>
             <td>
                 @if(Model.Order.CreationTime is null)

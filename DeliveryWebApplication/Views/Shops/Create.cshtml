@@ -39,7 +39,7 @@
 </div>
 <br />
 <div>
-    <a asp-action="Index">Повернутися до списку магазинів</a>
+    <a asp-action="Index" asp-route-back="@ViewData["Back"]">Повернутися до списку магазинів</a>
 </div>
 
 @section Scripts {

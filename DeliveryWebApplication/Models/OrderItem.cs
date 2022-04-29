@@ -41,7 +41,7 @@ namespace DeliveryWebApplication
         [Display(Name = "Вага")]
         public string FormattedWeight => ProductInShop is null ? "?" :
             ProductInShop.Product.Weight is decimal ?
-                Count + " шт." :
+                ProductInShop.Product.FormattedWeight + " × " + Count + " шт." :
                 Utils.FormattedWeight(Count);
     }
 }
