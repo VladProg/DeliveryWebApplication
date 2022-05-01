@@ -120,19 +120,19 @@
     <tbody>
 @foreach (var item in Model.Order.OrderItems) {
         <tr>
-            <td>
+            <td valign="middle">
                 @Html.DisplayFor(modelItem => item.ProductInShop.Product.Name)
             </td>
-            <td>
+            <td valign="middle">
                 @Html.DisplayFor(modelItem => item.ProductInShop.FormattedPrice)
             </td>
-            <td align="right">
+            <td align="right" valign="middle">
                 @if(Model.Order.CreationTime is null && item.ProductInShop.Product.Weight is not null)
                 {
                     @item.ProductInShop.Product.FormattedWeight <text>&nbsp;&nbsp;×</text>
                 }
             </td>
-            <td>
+            <td valign="middle">
                 @if(Model.Order.CreationTime is null)
                 {
                     <form asp-action="Details">
@@ -161,10 +161,10 @@
                     @Html.DisplayFor(modelItem => item.FormattedWeight)
                 }
             </td>
-            <td>
+            <td valign="middle">
                 @Html.DisplayFor(modelItem => item.Cost)
             </td>
-            <td>
+            <td valign="middle">
                 @if(Model.Order.CreationTime is null)
                 {
                     <form asp-action="Details">
