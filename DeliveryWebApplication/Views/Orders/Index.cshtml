@@ -1,5 +1,104 @@
 ﻿@model DeliveryWebApplication.Controllers.OrdersController.FilterClass
 
+@section scripts{
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+
+        function drawColumnChart() {
+
+            $.get('/api/ColumnChart/JsonData', function(JsonData) {
+                if (JsonData.length > 1)
+                {
+                    data = google.visualization.arrayToDataTable(JsonData, false);
+                    var option = {
+                        title: "Прибуток по магазинам",
+                        width: 900,
+                        height: 400,
+                        colors: ['#e75200', '#01a924']
+                    };
+                    chart = new google.visualization.ColumnChart(document.getElementById('chart1'));
+                    chart.draw(data, option);
+                }
+            })
+        }
+
+        function drawAnnotationChart() {
+
+            $.get('/api/AnnotationChart/JsonData', function(JsonData) {
+                if (JsonData.length > 1)
+                {
+                    for(let i=1;i<JsonData.length;i++)
+                        JsonData[i][0]=new Date(JsonData[i][0]);
+                    data = google.visualization.arrayToDataTable(JsonData, false);
+                    window.JsonData=JsonData;
+                    var option = {
+                        title: "Прибуток по магазинам",
+                        width: 800,
+                        height: 400,
+                        colors: ['#e75200', '#01a924'],
+                        allValuesSuffix: " ₴"
+                    };
+                    chart = new google.visualization.AnnotationChart(document.getElementById('chart1'));
+                    chart.draw(data, option);
+
+                    function rangechange_handler(e) {
+                        $('text:contains(PM)').remove();
+                        $('text:contains(AM)').remove();
+                        $('text:contains(:)').remove();
+                        $('text:contains(.)').remove();
+                        $('text:contains(…)').remove();
+                        $('button:contains(1h)').remove();
+                        $('text').each(function() {
+                            this.textContent=this.textContent
+                                .replace('January', 'Січень')
+                                .replace('February', 'Лютий')
+                                .replace('March', 'Березень')
+                                .replace('April', 'Квітень')
+                                .replace('May', 'Травень')
+                                .replace('June', 'Червень')
+                                .replace('July', 'Липень')
+                                .replace('August', 'Серпень')
+                                .replace('September', 'Вересень')
+                                .replace('October', 'Жовтень')
+                                .replace('November', 'Листопад')
+                                .replace('December', 'Грудень')
+                        });
+
+                        $("#chart1_AnnotationChart_zoomControlContainer").contents().filter(function(){ 
+                            return this.nodeType == 3; 
+                        })[0].nodeValue = "Зум: ";
+
+                        $('#chart1_AnnotationChart_zoomControlContainer_1-day')[0].textContent='1д';
+                        $('#chart1_AnnotationChart_zoomControlContainer_5-days')[0].textContent='5д';
+                        $('#chart1_AnnotationChart_zoomControlContainer_1-week')[0].textContent='7д';
+                        $('#chart1_AnnotationChart_zoomControlContainer_1-month')[0].textContent='1м';
+                        $('#chart1_AnnotationChart_zoomControlContainer_3-months')[0].textContent='3м';
+                        $('#chart1_AnnotationChart_zoomControlContainer_6-months')[0].textContent='6м';
+                        $('#chart1_AnnotationChart_zoomControlContainer_1-year')[0].textContent='1р';
+                        $('#chart1_AnnotationChart_zoomControlContainer_max')[0].textContent='max';
+                    }
+
+                    google.visualization.events.addListener(chart, 'rangechange', rangechange_handler);
+                    rangechange_handler();
+                }
+            })
+        }
+
+        @if(TempData.Peek("ShopId") is not null and not 0)
+        {
+            <text>drawChart = drawAnnotationChart</text>
+        }
+        else
+        {
+            <text>drawChart = drawColumnChart</text>
+        }
+        
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.load('current', {'packages': ['annotationchart'] });
+        google.charts.setOnLoadCallback(drawChart);
+    </script>
+}
+
 @{
     ViewData["Title"] = "Замовлення";
 }
@@ -21,43 +120,67 @@
     
     .Completed        { background: #f0fff0 }
     .Completed:hover  { background: #d0ffd0 }
+
+    tbody tr:hover
+    {
+        background: #ffffff;
+    }
+
+    #chart1_AnnotationChart_zoomControlContainer { font-size:small }
+    #chart1_AnnotationChart_zoomControlContainer_1-day { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_5-days { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_1-week { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_1-month { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_3-months { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_6-months { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_1-year { font-size:small; height:20px }
+    #chart1_AnnotationChart_zoomControlContainer_max { font-size:small; height:20px }
+    #chart1_AnnotationChart_legendContainer { font-size:small }
+    text { font-size:small }
 </style>
 
 <hr />
-<h4>Фільтр</h4>
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Index">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="CustomerId" class="control-label"></label> (<a asp-action="Index" asp-controller="Customers">відкрити список</a>)
-                <select asp-for="CustomerId" class ="form-control" asp-items="ViewBag.CustomerId"><option/></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="CourierId" class="control-label"></label> (<a asp-action="Index" asp-controller="Couriers">відкрити список</a>)
-                <select asp-for="CourierId" class ="form-control" asp-items="ViewBag.CourierId"><option/></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Orders">відкрити список</a>)
-                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
-            </div>
+<table style="width:100%"> <tr>
+    <td style="width:35%">
+        <h4>Фільтр</h4>
+        <div class="row">
+            <form asp-action="Index">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="CustomerId" class="control-label"></label> (<a asp-action="Index" asp-controller="Customers">відкрити список</a>)
+                    <select asp-for="CustomerId" class ="form-control" asp-items="ViewBag.CustomerId"><option/></select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CourierId" class="control-label"></label> (<a asp-action="Index" asp-controller="Couriers">відкрити список</a>)
+                    <select asp-for="CourierId" class ="form-control" asp-items="ViewBag.CourierId"><option/></select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Orders">відкрити список</a>)
+                    <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+                </div>
 
-            Статус <br />
-            <table width="100%" style="border: 1px solid #d0d0d0">
-                <tr class="Creating"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Creating) <label for="Creating"> @Order.STATUS_NAMES[(int)Order.Status.Creating].Full </label> </td> </tr>
-                <tr class="Waiting"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Waiting) <label for="Waiting"> @Order.STATUS_NAMES[(int)Order.Status.Waiting].Full </label> </td> </tr>
-                <tr class="Delivering"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Delivering) <label for="Delivering"> @Order.STATUS_NAMES[(int)Order.Status.Delivering].Full </label> </td> </tr>
-                <tr class="Refused"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Refused) <label for="Refused"> @Order.STATUS_NAMES[(int)Order.Status.Refused].Full </label> </td> </tr>
-                <tr class="Completed"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Completed) <label for="Completed"> @Order.STATUS_NAMES[(int)Order.Status.Completed].Full </label> </td> </tr>
-             </table>
+                Статус <br />
+                <table width="100%" style="border: 1px solid #d0d0d0">
+                    <tr class="Creating"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Creating) <label for="Creating"> @Order.STATUS_NAMES[(int)Order.Status.Creating].Full </label> </td> </tr>
+                    <tr class="Waiting"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Waiting) <label for="Waiting"> @Order.STATUS_NAMES[(int)Order.Status.Waiting].Full </label> </td> </tr>
+                    <tr class="Delivering"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Delivering) <label for="Delivering"> @Order.STATUS_NAMES[(int)Order.Status.Delivering].Full </label> </td> </tr>
+                    <tr class="Refused"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Refused) <label for="Refused"> @Order.STATUS_NAMES[(int)Order.Status.Refused].Full </label> </td> </tr>
+                    <tr class="Completed"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Completed) <label for="Completed"> @Order.STATUS_NAMES[(int)Order.Status.Completed].Full </label> </td> </tr>
+                 </table>
 
-            <br />
-            <div class="form-group">
-                <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
+                <br />
+                <div class="form-group">
+                    <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </td>
+    <td>
+        <div class="container">
+            <div id="chart1"></div>
+        </div>
+    </td>
+</tr> </table>
 
 <hr />
 
