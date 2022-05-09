@@ -7,35 +7,56 @@
 <h1>Товари</h1>
 
 <hr />
-<h4>Фільтр</h4>
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Index">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="TrademarkId" class="control-label"></label> (<a asp-action="Index" asp-controller="Trademarks">відкрити список</a>)
-                <select asp-for="TrademarkId" class ="form-control" asp-items="ViewBag.TrademarkId"><option/></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="CategoryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Categories">відкрити список</a>)
-                <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId"><option/></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="CountryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Countries">відкрити список</a>)
-                <select asp-for="CountryId" class ="form-control" asp-items="ViewBag.CountryId"><option/></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Products">відкрити список</a>)
-                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
-            </div>
-            <br />
-            <div class="form-group">
-                <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
+<table style="width:100%"> <tr style="background: #ffffff">
+    <td style="width:35%">
+        <h4>Фільтр</h4>
+        <div class="row">
+            <form asp-action="Index">
+                <div class="form-group">
+                    <label asp-for="TrademarkId" class="control-label"></label> (<a asp-action="Index" asp-controller="Trademarks">відкрити список</a>)
+                    <select asp-for="TrademarkId" class ="form-control" asp-items="ViewBag.TrademarkId"><option/></select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CategoryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Categories">відкрити список</a>)
+                    <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId"><option/></select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CountryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Countries">відкрити список</a>)
+                    <select asp-for="CountryId" class ="form-control" asp-items="ViewBag.CountryId"><option/></select>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Products">відкрити список</a>)
+                    <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+                </div>
+                <br />
+                <div class="form-group">
+                    <input type="submit" value="Застосувати фільтр" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </td>
+    <td style="padding:50px">
+        <div>
+            <h3>Додати продукти з файлу</h3>
+            @using (Html.BeginForm("Import", "Products", FormMethod.Post, new { enctype = "multipart/form-data", id = "frm-excel" }))
+            {
+                <div>
+                    Оберіть Excel-файл:
+                    <input type="file" name="fileExcel" id="fileExcel" />
+                    <div>
+                        <input type="submit" value="Додати" />
+                    </div>
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                </div>
+            }
+        </div>
+        <hr />
+        <div>
+            <h3>Зберегти продукти в файл</h3>
+            <a asp-action="Export" > Завантажити Excel-файл </a>
+        </div>
+    </td>
+</tr> </table>
 
 <hr />
 

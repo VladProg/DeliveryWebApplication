@@ -6,51 +6,6 @@ using Newtonsoft.Json;
 
 namespace DeliveryWebApplication
 {
-    public class Deletable
-    {
-        public bool Deleted { get; set; } = false;
-    }
-
-    public static class DeletableExtensions
-    {
-        public static IQueryable<T> Alive<T>(this IQueryable<T> seq) where T : Deletable => seq.Where(x => !x.Deleted);
-        public static IEnumerable<T> Alive<T>(this IEnumerable<T> seq) where T : Deletable => seq.Where(x => !x.Deleted);
-
-        public static async ValueTask<T?> AliveFindAsync<T>(this DbSet<T> seq, int? id) where T : Deletable
-        {
-            var res = await seq.FindAsync(id);
-            if (res is null || res.Deleted)
-                return null;
-            else
-                return res;
-        }
-
-    }
-
-    public static class Utils
-    {
-        public static string FormattedWeight(int? weight)
-        {
-            if (weight is null)
-                return "—";
-            if (weight < 1000)
-                return weight + " г";
-            else
-                return ((decimal)weight / 1000).ToString("0.###") + " кг";
-        }
-
-        public static string FormattedWeight(decimal? weight) => FormattedWeight((int?)(weight * 1000));
-
-        public static void SetCulture()
-        {
-            var cul = new System.Globalization.CultureInfo("en-US");
-            cul.NumberFormat.NumberDecimalSeparator = ".";
-            cul.NumberFormat.NumberGroupSeparator = "";
-            Thread.CurrentThread.CurrentCulture = cul;
-
-        }
-    }
-
     public partial class DeliveryContext : DbContext
     {
         public DeliveryContext()
@@ -140,6 +95,16 @@ namespace DeliveryWebApplication
         public virtual DbSet<ProductInShop> ProductsInShops { get; set; } = null!;
         public virtual DbSet<Shop> Shops { get; set; } = null!;
         public virtual DbSet<Trademark> Trademarks { get; set; } = null!;
+
+        public TEntity FindOrAdd<TEntity>(DbSet<TEntity> set, Func<TEntity, bool> predicate, TEntity add) where TEntity : Deletable
+        {
+            var find = set.Alive().FirstOrDefault(predicate);
+            if (find is not null)
+                return find;
+            set.Add(add);
+            SaveChanges();
+            return add;
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

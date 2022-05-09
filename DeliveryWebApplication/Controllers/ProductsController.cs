@@ -450,5 +450,124 @@ namespace DeliveryWebApplication.Controllers
         {
             return _context.Products.Any(e => e.Id == id);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Import(IFormFile fileExcel)
+        {
+            if (!ModelState.IsValid)
+                return View(nameof(Index));
+            try
+            {
+                using var reader = new ExcelReader(fileExcel);
+                if (!reader.Rows().Any())
+                    throw new InvalidDataException("Аркуш порожній");
+                int nameIndex = -1, weightIndex = -1, trademarkIndex = -1, categoryIndex = -1, countryIndex = -1;
+                List<(int Index, Shop Shop)> shops = new();
+
+                foreach (var cell in reader.Rows().First().Cells())
+                {
+                    switch (cell.GetString().ToLower().Trim().Split()[0])
+                    {
+                        case "назва":
+                            nameIndex = cell.WorksheetColumn().ColumnNumber();
+                            break;
+                        case "вага":
+                            weightIndex = cell.WorksheetColumn().ColumnNumber();
+                            break;
+                        case "торгова":
+                            trademarkIndex = cell.WorksheetColumn().ColumnNumber();
+                            break;
+                        case "категорія":
+                            categoryIndex = cell.WorksheetColumn().ColumnNumber();
+                            break;
+                        case "країна":
+                            countryIndex = cell.WorksheetColumn().ColumnNumber();
+                            break;
+                        default:
+                            string str = cell.GetString().Trim();
+                            if (str.Length == 0)
+                                break;
+                            int pos1 = str.IndexOf('(');
+                            int pos2 = str.LastIndexOf(')');
+                            if (pos1 == -1 || pos2 == -1 || pos1 > pos2)
+                                throw new InvalidDataException("Некоректний стовпчик: " + str);
+                            Shop shop = new() { Name = str[..pos1].Trim(), Address = str[(pos1 + 1)..pos2].Trim(), Phone = "?", Site = "?" };
+                            shop = _context.FindOrAdd(_context.Shops, s => s.Name == shop.Name && s.Address == shop.Address, shop);
+                            shops.Add((cell.WorksheetColumn().ColumnNumber(), shop));
+                            break;
+                    }
+                }
+                if (nameIndex == -1)
+                    throw new InvalidDataException("Немає стовпчика \"Назва\"");
+
+                foreach (var row in reader.Rows().Skip(1))
+                {
+                    string name = row.Cell(nameIndex).GetString();
+                    decimal? weight = weightIndex == -1 || row.Cell(weightIndex).IsEmpty() ? 0 : (decimal)row.Cell(weightIndex).GetDouble();
+                    string trademark = trademarkIndex == -1 ? "" : row.Cell(trademarkIndex).GetString();
+                    string category = categoryIndex == -1 ? "" : row.Cell(categoryIndex).GetString();
+                    string country = countryIndex == -1 ? "" : row.Cell(countryIndex).GetString();
+                    if (name == "") throw new InvalidDataException("У кожного продукта має бути назва");
+                    if (weight <= 0) weight = null;
+                    if (trademark == "") trademark = "—";
+                    if (category == "") category = "—";
+                    if (country == "") country = "—";
+                    Product product = new()
+                    {
+                        Name = name,
+                        Weight = weight,
+                        Trademark = _context.FindOrAdd(_context.Trademarks, t => t.Name == trademark, new() { Name = trademark }),
+                        Category = _context.FindOrAdd(_context.Categories, t => t.Name == category, new() { Name = category }),
+                        Country = _context.FindOrAdd(_context.Countries, t => t.Name == country, new() { Name = country })
+                    };
+                    product = _context.FindOrAdd(_context.Products,
+                                                 p => p.Name == product.Name &&
+                                                      p.Weight == product.Weight &&
+                                                      p.Trademark == product.Trademark &&
+                                                      p.Category == product.Category &&
+                                                      p.Country == product.Country,
+                                                 product);
+                    foreach (var (index, shop) in shops)
+                    {
+                        decimal price = row.Cell(index).IsEmpty() ? 0 : (decimal)row.Cell(index).GetDouble();
+                        var productInShop = _context.ProductsInShops.Alive().FirstOrDefault(pis => pis.ProductId == product.Id && pis.ShopId == shop.Id);
+                        if (productInShop is not null)
+                            productInShop.Deleted = true;
+                        if (price > 0)
+                            _context.ProductsInShops.Add(new() { Product = product, Shop = shop, Price = price });
+                        _context.SaveChanges();
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                Index().Wait();
+                return View(nameof(Index));
+            }
+        }
+
+        public ActionResult Export()
+        {
+            using ExcelWriter writer = new();
+            var shops = _context.Shops.Alive().ToList();
+            writer.AddRow(new string[] { "Назва", "Вага (кг)", " Торгова марка", "Категорія", "Країна виробництва" },
+                          from shop in shops select shop.NameWithAddress);
+            Index().Wait();
+            foreach (var product in Filter.Products.OrderBy(p => p.Name))
+            {
+                var productsInShops = product.ProductsInShops.Alive().ToList();
+                writer.AddRow(new object[] { product.Name, product.Weight, product.Trademark.Name, product.Category.Name, product.Country.Name },
+                              from shop in shops select (object)productsInShops.FirstOrDefault(pis => pis.ShopId == shop.Id)?.Price);
+            }
+            string name = "Продукти";
+            if (Filter.TrademarkId != 0) name += ", торгова марка '" + _context.Trademarks.Find(Filter.TrademarkId).Name + "'";
+            if (Filter.CategoryId != 0) name += ", категорія '" + _context.Categories.Find(Filter.CategoryId).Name + "'";
+            if (Filter.CountryId != 0) name += ", країна виробництва '" + _context.Countries.Find(Filter.CountryId).Name + "'";
+            if (Filter.ShopId != 0) name += ", магазин '" + _context.Shops.Find(Filter.ShopId).NameWithAddress + "'";
+            return writer.Save(name);
+        }
     }
 }
