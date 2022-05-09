@@ -553,6 +553,7 @@ namespace DeliveryWebApplication.Controllers
         {
             using ExcelWriter writer = new();
             var shops = _context.Shops.Alive().ToList();
+            if (Filter.ShopId != 0) shops = shops.Where(s => s.Id == Filter.ShopId).ToList();
             writer.AddRow(new string[] { "Назва", "Вага (кг)", " Торгова марка", "Категорія", "Країна виробництва" },
                           from shop in shops select shop.NameWithAddress);
             Index().Wait();

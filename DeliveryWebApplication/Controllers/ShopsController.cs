@@ -49,7 +49,7 @@ namespace DeliveryWebApplication.Controllers
             {
                 _context.Add(shop);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { back });
             }
             return View(shop);
         }
@@ -109,7 +109,7 @@ namespace DeliveryWebApplication.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { back });
             }
             return View(shop);
         }
@@ -143,7 +143,7 @@ namespace DeliveryWebApplication.Controllers
             var shop = await _context.Shops.FindAsync(id);
             shop.Deleted = true;
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { back });
         }
 
         private bool ShopExists(int id)
