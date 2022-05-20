@@ -8,28 +8,30 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class CategoriesController : Controller
+    public class CategoriesController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public CategoriesController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public CategoriesController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: Categories
         public async Task<IActionResult> Index()
         {
+            if (!CheckRoles(ADMIN|SHOP)) return Forbid();
             return View(await _context.Categories.Alive().Include(c => c.Products).ToListAsync());
         }
 
         // GET: Categories/Create
         public IActionResult Create()
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             return View();
         }
 
@@ -40,6 +42,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Category category)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (_context.Categories.Alive().Any(c => c.Name == category.Name))
                 ModelState.AddModelError("Name", "Така категорія вже існує");
             if (ModelState.IsValid)
@@ -54,6 +57,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Categories/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -74,6 +78,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Category category)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id != category.Id || category.Deleted)
             {
                 return NotFound();
@@ -107,6 +112,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -128,6 +134,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             var category = await _context.Categories.FindAsync(id);
             category.Deleted = true;
             await _context.SaveChangesAsync();

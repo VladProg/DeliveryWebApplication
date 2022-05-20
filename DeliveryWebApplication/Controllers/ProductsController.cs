@@ -10,22 +10,23 @@ using DeliveryWebApplication;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class ProductsController : Controller
+    public class ProductsController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public ProductsController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public ProductsController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
+            if (!CheckRoles(ANY)) return Forbid();
             IQueryable<Product> deliveryContext = _context.Products.Alive().Include(p => p.Category).Include(p => p.Country).Include(p => p.Trademark).Include(p => p.ProductsInShops);
             var trademark = await _context.Trademarks.Alive().Include(t=>t.Products).FirstOrDefaultAsync(t => t.Id == Filter.TrademarkId);
             var category = await _context.Categories.Alive().Include(t=>t.Products).FirstOrDefaultAsync(t => t.Id == Filter.CategoryId);
@@ -40,6 +41,8 @@ namespace DeliveryWebApplication.Controllers
             if (Filter.CategoryId != 0) deliveryContext = deliveryContext.Where(p => p.CategoryId == Filter.CategoryId);
             if (Filter.CountryId != 0) deliveryContext = deliveryContext.Where(p => p.CountryId == Filter.CountryId);
             if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ProductsInShops.Any(pis => pis.ShopId == Filter.ShopId && !pis.Deleted));
+            else if(!ViewBag.IsAuthenticated || (string)TempData.Peek("Role") != "admin" && (string)TempData.Peek("Role") != "shop")
+                deliveryContext = deliveryContext.Where(p => p.ProductsInShops.Any(pis => !pis.Deleted));
             ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().Where(x => x.Products.Any(y => !y.Deleted)).OrderBy(x => x.Name), "Id", "Name");
             ViewData["CountryId"] = new SelectList(_context.Countries.Alive().Where(x => x.Products.Any(y => !y.Deleted)).OrderBy(x => x.Name), "Id", "Name");
             ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().Where(x => x.Products.Any(y => !y.Deleted)).OrderBy(x => x.Name), "Id", "Name");
@@ -94,6 +97,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(FilterClass model)
         {
+            if (!CheckRoles(ANY)) return Forbid();
             Filter = model;
             return await Index();
         }
@@ -107,6 +111,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            if (!CheckRoles(ANY)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -133,6 +138,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Details(int id, DetailsInfo info)
         {
+            if (!CheckRoles(CUSTOMER)) return Forbid();
             var product = await _context.Products.FindAsync(id);
             if(product.Weight is null)
             {
@@ -216,6 +222,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Products/Create
         public IActionResult Create()
         {
+            if (!CheckRoles(ADMIN|SHOP)) return Forbid();
             ViewData["CategoryId"] = new SelectList(_context.Categories.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CategoryId);
             ViewData["CountryId"] = new SelectList(_context.Countries.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.CountryId);
             ViewData["TrademarkId"] = new SelectList(_context.Trademarks.Alive().OrderBy(x => x.Name), "Id", "Name", Filter.TrademarkId);
@@ -229,6 +236,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateInfo info)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (ModelState.IsValid &&
                 _context.Products.Alive().Any(p => p.Name == info.Product.Name &&
                                                    p.Weight == info.Product.Weight &&
@@ -252,6 +260,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateTrademark(CreateInfo info)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (_context.Trademarks.Alive().Any(t => t.Name == info.Trademark.Name))
                 ModelState.AddModelError("Trademark.Name", "Така торгова марка вже існує");
             if (ModelState.IsValid)
@@ -273,6 +282,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateCategory(CreateInfo info)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (_context.Categories.Alive().Any(c => c.Name == info.Category.Name))
                 ModelState.AddModelError("Category.Name", "Така категорія вже існує");
             if (ModelState.IsValid)
@@ -293,6 +303,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -316,6 +327,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CreateInfo info)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id != info.Product.Id)
             {
                 return NotFound();
@@ -359,6 +371,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditTrademark(int id, CreateInfo info)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             var product = await _context.Products.AliveFindAsync(id);
             if (product == null)
             {
@@ -388,6 +401,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCategory(int id, CreateInfo info)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             var product = await _context.Products.AliveFindAsync(id);
             if (product == null)
             {
@@ -416,6 +430,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -440,6 +455,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             var product = await _context.Products.FindAsync(id);
             product.Deleted = true;
             await _context.SaveChangesAsync();
@@ -455,6 +471,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Import(IFormFile fileExcel)
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             if (!ModelState.IsValid)
                 return View(nameof(Index));
             try
@@ -464,7 +481,7 @@ namespace DeliveryWebApplication.Controllers
                     throw new InvalidDataException("Аркуш порожній");
                 int nameIndex = -1, weightIndex = -1, trademarkIndex = -1, categoryIndex = -1, countryIndex = -1;
                 List<(int Index, Shop Shop)> shops = new();
-
+                int other_shops = 0;
                 foreach (var cell in reader.Rows().First().Cells())
                 {
                     switch (cell.GetString().ToLower().Trim().Split()[0])
@@ -494,12 +511,23 @@ namespace DeliveryWebApplication.Controllers
                                 throw new InvalidDataException("Некоректний стовпчик: " + str);
                             Shop shop = new() { Name = str[..pos1].Trim(), Address = str[(pos1 + 1)..pos2].Trim(), Phone = "?", Site = "?" };
                             shop = _context.FindOrAdd(_context.Shops, s => s.Name == shop.Name && s.Address == shop.Address, shop);
+                            if (ViewBag.UserShopId != shop.Id)
+                                other_shops++;
                             shops.Add((cell.WorksheetColumn().ColumnNumber(), shop));
                             break;
                     }
                 }
                 if (nameIndex == -1)
                     throw new InvalidDataException("Немає стовпчика \"Назва\"");
+                if ((string)TempData.Peek("Role") == "shop" && other_shops > 0)
+                    if(other_shops == 1)
+                        throw new InvalidDataException("Файл містить 1 магазин, в якому ви не можете редагувати ціни");
+                    else if (other_shops % 100 is >= 10 and <= 20 || other_shops % 10 is 2 or 3 or 4)
+                        throw new InvalidDataException($"Файл містить {other_shops} магазини, в яких ви не можете редагувати ціни");
+                    else if (other_shops % 10 == 1)
+                        throw new InvalidDataException($"Файл містить {other_shops} магазин, в яких ви не можете редагувати ціни");
+                    else
+                        throw new InvalidDataException($"Файл містить {other_shops} магазинів, в яких ви не можете редагувати ціни");
 
                 foreach (var row in reader.Rows().Skip(1))
                 {
@@ -508,7 +536,7 @@ namespace DeliveryWebApplication.Controllers
                     string trademark = trademarkIndex == -1 ? "" : row.Cell(trademarkIndex).GetString();
                     string category = categoryIndex == -1 ? "" : row.Cell(categoryIndex).GetString();
                     string country = countryIndex == -1 ? "" : row.Cell(countryIndex).GetString();
-                    if (name == "") throw new InvalidDataException("У кожного продукта має бути назва");
+                    if (name == "") throw new InvalidDataException("У кожного продукту має бути назва");
                     if (weight <= 0) weight = null;
                     if (trademark == "") trademark = "—";
                     if (category == "") category = "—";
@@ -551,6 +579,7 @@ namespace DeliveryWebApplication.Controllers
 
         public ActionResult Export()
         {
+            if (!CheckRoles(ADMIN | SHOP)) return Forbid();
             using ExcelWriter writer = new();
             var shops = _context.Shops.Alive().ToList();
             if (Filter.ShopId != 0) shops = shops.Where(s => s.Id == Filter.ShopId).ToList();

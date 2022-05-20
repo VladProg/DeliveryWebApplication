@@ -16,10 +16,10 @@ namespace DeliveryWebApplication.Controllers
             Utils.SetCulture();
         }
 
-        [HttpGet("JsonData")]
-        public JsonResult JsonData()
+        [HttpGet("JsonData/{id}")]
+        public JsonResult JsonData(int id)
         {
-            IEnumerable<Order> orders = _context.Shops.Include(s => s.Orders).ThenInclude(o => o.OrderItems).ThenInclude(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefault(s => s.Id == (int)TempData.Peek("ShopId")).Orders;
+            IEnumerable<Order> orders = _context.Shops.Include(s => s.Orders).ThenInclude(o => o.OrderItems).ThenInclude(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefault(s => s.Id == id).Orders;
             orders = orders.Where(o => o.DeliveryTime != null);
             if (TempData.Peek("CustomerId") is int customerId and not 0)
                 orders = orders.Where(o => o.CustomerId == customerId);

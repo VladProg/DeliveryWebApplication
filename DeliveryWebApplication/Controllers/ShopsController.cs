@@ -8,22 +8,23 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class ShopsController : Controller
+    public class ShopsController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public ShopsController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public ShopsController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: Shops
         public async Task<IActionResult> Index(string back = "")
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             ViewData["Back"] = back;
             return View(await _context.Shops.Alive().Include(s => s.ProductsInShops).ToListAsync());
         }
@@ -31,6 +32,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Shops/Create
         public IActionResult Create(string back = "")
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             ViewData["Back"] = back;
             return View();
         }
@@ -42,6 +44,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Address,Phone,Site")] Shop shop, string back = "")
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             ViewData["Back"] = back;
             if (_context.Shops.Alive().Any(s => s.Name == shop.Name && s.Address == shop.Address))
                 ModelState.AddModelError("", "Такий магазин вже існує");
@@ -57,6 +60,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Shops/Edit/5
         public async Task<IActionResult> Edit(int? id, string back = "")
         {
+            if (!CheckRoles(ADMIN,SHOP:id)) return Forbid();
             ViewData["Back"] = back;
             if (id == null)
             {
@@ -78,6 +82,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Address,Phone,Site")] Shop shop, string back = "")
         {
+            if (!CheckRoles(ADMIN, SHOP: id)) return Forbid();
             ViewData["Back"] = back;
             if (id != shop.Id)
             {
@@ -109,7 +114,7 @@ namespace DeliveryWebApplication.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index), new { back });
+                return RedirectToAction(nameof(Index), (string)TempData.Peek("Role") == "admin" ? "Shops" : "Home", new { back });
             }
             return View(shop);
         }
@@ -117,6 +122,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Shops/Delete/5
         public async Task<IActionResult> Delete(int? id, string back = "")
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             ViewData["Back"] = back;
             if (id == null)
             {
@@ -139,6 +145,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id, string back = "")
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             ViewData["Back"] = back;
             var shop = await _context.Shops.FindAsync(id);
             shop.Deleted = true;

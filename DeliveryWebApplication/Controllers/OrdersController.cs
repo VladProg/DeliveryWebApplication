@@ -10,22 +10,24 @@ using DeliveryWebApplication;
 using System.Diagnostics;
 using System.Globalization;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class OrdersController : Controller
+    public class OrdersController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public OrdersController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public OrdersController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: Orders
         public async Task<IActionResult> Index()
         {
+            if (!CheckRoles(ADMIN | SHOP|COURIER|CUSTOMER)) return Forbid();
+            _filter = null;
             if (!Filter.Creating && !Filter.Waiting && !Filter.Delivering && !Filter.Refused && !Filter.Completed)
                 Filter.Creating = Filter.Waiting = Filter.Delivering = Filter.Refused = Filter.Completed = true;
             IEnumerable<Order> deliveryContext = _context.Orders.Include(p => p.Courier).Include(p => p.Customer).Include(p => p.Shop).Include(p => p.OrderItems).ThenInclude(item => item.ProductInShop).ThenInclude(pis => pis.Product);
@@ -37,16 +39,17 @@ namespace DeliveryWebApplication.Controllers
             if (shop is null || !shop.Orders.Any() && !shop.ProductsInShops.Any(y => !y.Deleted)) Filter.ShopId = 0;
             Filter = Filter;
             if (Filter.CustomerId != 0) deliveryContext = deliveryContext.Where(p => p.CustomerId == Filter.CustomerId);
-            if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ShopId == Filter.ShopId);
+            if ((string) TempData.Peek("Role") == "shop") deliveryContext = deliveryContext.Where(p => p.ShopId == ViewBag.UserShopId);
+            else if (Filter.ShopId != 0) deliveryContext = deliveryContext.Where(p => p.ShopId == Filter.ShopId);
             if (Filter.CourierId != 0) deliveryContext = deliveryContext.Where(o => o.CourierId is null || o.CourierId == Filter.CourierId || o.CourierComment is not null);
             deliveryContext = deliveryContext.AsEnumerable();
-            if (!Filter.Creating) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Creating);
+            if (!Filter.Creating || Filter.CourierId != 0) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Creating);
             if (!Filter.Waiting) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Waiting);
             if (!Filter.Delivering) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Delivering);
             if (!Filter.Refused) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Refused);
             if (!Filter.Completed) deliveryContext = deliveryContext.Where(o => o.StatusId != Order.Status.Completed);
-            ViewData["CustomerId"] = new SelectList(_context.Customers.OrderBy(x => x.Phone + " " + x.Name), "Id", "NameWithPhone");
-            ViewData["CourierId"] = new SelectList(_context.Couriers.OrderBy(x => x.Phone + " " + x.Name), "Id", "NameWithPhone");
+            ViewData["CustomerId"] = new SelectList(_context.Customers.Where(c=>c.Orders.Any()).OrderBy(x => x.Phone + " " + x.Name), "Id", "NameWithPhone");
+            ViewData["CourierId"] = new SelectList(_context.Couriers.Where(c=>c.Orders.Any()).OrderBy(x => x.Phone + " " + x.Name), "Id", "NameWithPhone");
             ViewData["ShopId"] = new SelectList(_context.Shops.Where(x => x.Orders.Any() || x.ProductsInShops.Any(y => !y.Deleted)).OrderBy(x=>x.Deleted).ThenBy(x => x.Name + " " + x.Address), "Id", "NameWithAddress");
             ViewData["StatusId"] = new SelectList(Order.STATUS_NAMES.Select((Name, Id) => new { Name, Id }), "Id", "Name");
             Filter.Orders = deliveryContext.ToList();
@@ -112,6 +115,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(FilterClass model)
         {
+            if (!CheckRoles(ADMIN | SHOP | COURIER | CUSTOMER)) return Forbid();
             Filter = model;
             return await Index();
         }
@@ -125,6 +129,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            if (!CheckRoles(ADMIN | SHOP | COURIER | CUSTOMER)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -142,6 +147,12 @@ namespace DeliveryWebApplication.Controllers
             {
                 return NotFound();
             }
+            if (!CheckRoles(ADMIN|COURIER,CUSTOMER:order.CustomerId,SHOP:order.ShopId)) return Forbid();
+            if ((string)TempData.Peek("Role") == "courier" &&
+                (order.StatusId is Order.Status.Creating ||
+                 order.StatusId is not Order.Status.Refused && order.CourierId is not null && order.CourierId != ViewBag.UserCourierId))
+                return Forbid();
+
 
             return View(new DetailsInfo { Order = order });
         }
@@ -150,6 +161,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Details(int id, DetailsInfo info)
         {
+            if (!CheckRoles(CUSTOMER)) return Forbid();
             var product = _context.OrderItems.Include(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefault(oi => oi.Id == info.OrderItem.Id).ProductInShop.Product;
             if (product.Weight is null)
             {
@@ -168,6 +180,7 @@ namespace DeliveryWebApplication.Controllers
                 return await Details(id);
 
             var order = await _context.Orders.FindAsync(id);
+            if (!CheckRoles(CUSTOMER:order.CustomerId)) return Forbid();
             var orderItem = await _context.OrderItems.FindAsync(info.OrderItem.Id);
             orderItem.Count = info.OrderItem.Count;
             if (orderItem.Count == 0)
@@ -204,6 +217,7 @@ namespace DeliveryWebApplication.Controllers
             }
 
             var order = await _context.Orders.Include(o => o.Shop).Include(o => o.OrderItems).ThenInclude(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefaultAsync(o => o.Id == id);
+            if (!CheckRoles(CUSTOMER:order.CustomerId)) return Forbid();
             if (order == null)
             {
                 return NotFound();
@@ -234,6 +248,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int id, [Bind("Id,CustomerId,CourierId,ShopId,DeliveryPrice,CreationTime,DeliveryTime,Address,CustomerComment,CourierComment")] Order order)
         {
+            if (!CheckRoles(CUSTOMER)) return Forbid();
             if (id != order.Id)
             {
                 return NotFound();
@@ -245,6 +260,7 @@ namespace DeliveryWebApplication.Controllers
                 ModelState.AddModelError("DeliveryPrice", "Введіть ціну доставки");
 
             var order1 = await _context.Orders.Include(o => o.Shop).Include(o => o.OrderItems).ThenInclude(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefaultAsync(o => o.Id == id);
+            if (!CheckRoles(CUSTOMER: order1.CustomerId)) return Forbid();
             order1.DeliveryPrice = order.DeliveryPrice;
             order1.Address = order.Address;
             order1.CustomerComment = order.CustomerComment;
@@ -292,6 +308,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var order = await _context.Orders.FindAsync(id);
+            if (!CheckRoles(CUSTOMER: order.CustomerId)) return Forbid();
             if (order is null)
             {
                 return NotFound();
@@ -319,6 +336,7 @@ namespace DeliveryWebApplication.Controllers
 
         public async Task<IActionResult> Deliver(int id)
         {
+            if (!CheckRoles(COURIER)) return Forbid();
             var order = await _context.Orders.FindAsync(id);
             var courierId = (int?)TempData.Peek("CourierId") ?? 0;
             if (order is null || courierId == 0)
@@ -356,6 +374,7 @@ namespace DeliveryWebApplication.Controllers
             }
 
             var order = await _context.Orders.Include(o => o.Shop).Include(o => o.OrderItems).ThenInclude(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefaultAsync(o => o.Id == id);
+            if (!CheckRoles(COURIER: order.CourierId)) return Forbid();
             if (order == null)
             {
                 return NotFound();
@@ -377,6 +396,7 @@ namespace DeliveryWebApplication.Controllers
             }
 
             var order1 = await _context.Orders.Include(o => o.Shop).Include(o => o.OrderItems).ThenInclude(oi => oi.ProductInShop).ThenInclude(pis => pis.Product).FirstOrDefaultAsync(o => o.Id == id);
+            if (!CheckRoles(COURIER: order1.CourierId)) return Forbid();
             order1.CourierComment = order.CourierComment;
             if (string.IsNullOrWhiteSpace(order.CourierComment))
                 ModelState.AddModelError("CourierComment", "Залиште коментар");
@@ -407,6 +427,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> Done(int id)
         {
             var order = await _context.Orders.FindAsync(id);
+            if (!CheckRoles(COURIER: order.CourierId)) return Forbid();
             order.DeliveryTime = DateTime.Now;
 
             try

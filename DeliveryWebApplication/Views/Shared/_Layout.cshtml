@@ -24,13 +24,90 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav">
+                        @if(!ViewBag.IsAuthenticated || (string)TempData.Peek("Role")!="courier"){
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Товари</a>
                         </li>
+                        }
+                        @if(ViewBag.IsAuthenticated&&(string)TempData.Peek("Role")!="none"){
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Orders" asp-action="Index">Замовлення</a>
-                        </li>
+                        </li>}
+                        @if((string)TempData.Peek("Role")=="admin"){
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Roles" asp-action="Index">Користувачі</a>
+                        </li>}
+                    </ul>
+                    <ul class="navbar-nav" style="float:right">
+                        @if (ViewBag.IsAuthenticated)
+                        {
+                            if (!ViewBag.Roles.Contains("customer") || ViewBag.Roles.Contains("courier") || ViewBag.Roles.Contains("shop") || ViewBag.Roles.Contains("admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                        @if ((string)TempData.Peek("Role") == "none")
+                                        {
+                                            <text>Ваш акаунт заблоковано</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "customer")
+                                        {
+                                            <text>Клієнт</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "courier")
+                                        {
+                                            <text>Кур'єр</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "shop")
+                                        {
+                                            <text>Представник магазину</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "admin")
+                                        {
+                                            <text>Адмін</text>
+                                        }
+                                    </a>
+                                    <div class="dropdown-menu">
+                                        @if (ViewBag.Roles.Contains("customer"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Customer">Клієнт</a>
+                                        }
+                                        @if (ViewBag.Roles.Contains("courier"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Courier">Кур'єр</a>
+                                        }
+                                        @if (ViewBag.Roles.Contains("shop"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Shop">Представник магазину</a>
+                                        }
+                                        @if (ViewBag.Roles.Contains("admin"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Admin">Адмін</a>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                            <li class="nav-item dropdown" style="width:fit-content; min-width:225px">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                    @ViewBag.Name
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Edit">Редагувати дані про себе</a>
+                                    @if((string)TempData.Peek("Role")=="shop") { <a class="dropdown-item" asp-controller="Shops" asp-action="Edit" asp-route-id=@ViewBag.UserShopId>Редагувати дані про магазин</a> }
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Змінити пароль</a>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Logout">Вихід</a>
+                                </div>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Вхід</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">Реєстація</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

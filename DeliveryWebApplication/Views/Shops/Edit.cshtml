@@ -39,9 +39,10 @@
     </div>
 </div>
 <br />
+@if((string)TempData.Peek("Role")=="admin") { 
 <div>
     <a asp-action="Index" asp-route-back="@ViewData["Back"]">Повернутися до списку магазинів</a>
-</div>
+</div>}
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

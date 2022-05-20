@@ -13,7 +13,15 @@
             <input type="hidden" name="ProductId" value="@ViewData["ProductId"]" />
             <div class="form-group">
                 <label asp-for="ShopId" class="control-label"></label>
-                <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+                @if((string)TempData.Peek("Role")=="admin")
+                {
+                    <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+                }
+                else
+                {
+                    <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId" disabled=true></select>
+                    <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId" hidden="hidden"></select>
+                }
                 <span asp-validation-for="ShopId" class="text-danger"></span>
             </div>
             <div class="form-group">

@@ -23,8 +23,8 @@
         }
 
         function drawAnnotationChart() {
-
-            $.get('/api/AnnotationChart/JsonData', function(JsonData) {
+            let shopId=@((string)TempData.Peek("Role") == "shop" ? ViewBag.UserShopId : TempData.Peek("ShopId"));
+            $.get('/api/AnnotationChart/JsonData/'+shopId, function(JsonData) {
                 if (JsonData.length > 1)
                 {
                     for(let i=1;i<JsonData.length;i++)
@@ -84,7 +84,7 @@
             })
         }
 
-        @if(TempData.Peek("ShopId") is not null and not 0)
+        @if(TempData.Peek("ShopId") is not null and not 0 || (string)TempData.Peek("Role") == "shop")
         {
             <text>drawChart = drawAnnotationChart</text>
         }
@@ -146,6 +146,7 @@
         <div class="row">
             <form asp-action="Index">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { 
                 <div class="form-group">
                     <label asp-for="CustomerId" class="control-label"></label> (<a asp-action="Index" asp-controller="Customers">відкрити список</a>)
                     <select asp-for="CustomerId" class ="form-control" asp-items="ViewBag.CustomerId"><option/></select>
@@ -154,14 +155,17 @@
                     <label asp-for="CourierId" class="control-label"></label> (<a asp-action="Index" asp-controller="Couriers">відкрити список</a>)
                     <select asp-for="CourierId" class ="form-control" asp-items="ViewBag.CourierId"><option/></select>
                 </div>
+                }
+                @if((string)TempData.Peek("Role")!="shop") { 
                 <div class="form-group">
-                    <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Orders">відкрити список</a>)
+                    <label asp-for="ShopId" class="control-label"></label> @if((string)TempData.Peek("Role")=="admin") { <text>(<a asp-action="Index" asp-controller="Shops" asp-route-back="Orders">відкрити список</a>) </text> }
                     <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
                 </div>
+                }
 
                 Статус <br />
                 <table width="100%" style="border: 1px solid #d0d0d0">
-                    <tr class="Creating"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Creating) <label for="Creating"> @Order.STATUS_NAMES[(int)Order.Status.Creating].Full </label> </td> </tr>
+                    @if((string)TempData.Peek("Role")!="courier") { <tr class="Creating"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Creating) <label for="Creating"> @Order.STATUS_NAMES[(int)Order.Status.Creating].Full </label> </td> </tr> }
                     <tr class="Waiting"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Waiting) <label for="Waiting"> @Order.STATUS_NAMES[(int)Order.Status.Waiting].Full </label> </td> </tr>
                     <tr class="Delivering"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Delivering) <label for="Delivering"> @Order.STATUS_NAMES[(int)Order.Status.Delivering].Full </label> </td> </tr>
                     <tr class="Refused"> <td width="14px"></td> <td> @Html.CheckBoxFor(m => m.Refused) <label for="Refused"> @Order.STATUS_NAMES[(int)Order.Status.Refused].Full </label> </td> </tr>
@@ -177,7 +181,7 @@
     </td>
     <td>
         <div class="container">
-            <div id="chart1"></div>
+            @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { <div id="chart1"></div> }
         </div>
     </td>
 </tr> </table>

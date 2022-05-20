@@ -35,10 +35,10 @@
                 @Html.DisplayFor(modelItem => item.CountAlive)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
+                @if((string)TempData.Peek("Role")=="admin"){<a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>}
                 @if(!item.HasAlive)
                 {
-                    <text> | </text>
+                    @if((string)TempData.Peek("Role")=="admin") { <text> | </text> }
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
                 }
             </td>

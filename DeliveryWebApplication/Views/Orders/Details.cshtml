@@ -85,11 +85,11 @@
     </dl>
 </div>
 <div>
-    @if(Model.Order.StatusId is Order.Status.Creating && (int?)TempData.Peek("CustomerId") == Model.Order.CustomerId) { <a asp-action="Create" asp-route-id=@Model.Order.Id>Підтвердити замовлення</a> <text>|</text> }
-    @if(Model.Order.StatusId is Order.Status.Waiting or Order.Status.Refused && (int?)TempData.Peek("CustomerId") == Model.Order.CustomerId) { <a asp-action="Cancel" asp-route-id=@Model.Order.Id>Відмінити замовлення</a> <text>|</text> }
-    @if(Model.Order.StatusId is Order.Status.Waiting or Order.Status.Refused && TempData.Peek("CourierId") is not null and not 0) { <a asp-action="Deliver" asp-route-id=@Model.Order.Id>Доставити це замовлення</a> <text>|</text> }
-    @if(Model.Order.StatusId is Order.Status.Delivering && (int?)TempData.Peek("CourierId") == Model.Order.CourierId) { <a asp-action="Refuse" asp-route-id=@Model.Order.Id>Відмінити доставку</a> <text>|</text> }
-    @if(Model.Order.StatusId is Order.Status.Delivering && (int?)TempData.Peek("CourierId") == Model.Order.CourierId) { <a asp-action="Done" asp-route-id=@Model.Order.Id>Доставлено</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Creating && (int?)TempData.Peek("CustomerId") == Model.Order.CustomerId && (string)TempData.Peek("Role")=="customer") { <a class="btn btn-primary" asp-action="Create" asp-route-id=@Model.Order.Id>Підтвердити замовлення</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Waiting or Order.Status.Refused && (int?)TempData.Peek("CustomerId") == Model.Order.CustomerId && (string)TempData.Peek("Role")=="customer") { <a class="btn btn-danger" asp-action="Cancel" asp-route-id=@Model.Order.Id>Відмінити замовлення</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Waiting or Order.Status.Refused && TempData.Peek("CourierId") is not null and not 0 && (string)TempData.Peek("Role")=="courier") { <a class="btn btn-primary" asp-action="Deliver" asp-route-id=@Model.Order.Id>Доставити це замовлення</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Delivering && (int?)TempData.Peek("CourierId") == Model.Order.CourierId && (string)TempData.Peek("Role")=="courier") { <a class="btn btn-danger" asp-action="Refuse" asp-route-id=@Model.Order.Id>Відмінити доставку</a> <text>|</text> }
+    @if(Model.Order.StatusId is Order.Status.Delivering && (int?)TempData.Peek("CourierId") == Model.Order.CourierId && (string)TempData.Peek("Role")=="courier") { <a class="btn btn-primary" asp-action="Done" asp-route-id=@Model.Order.Id>Доставлено</a> <text>|</text> }
     <a asp-action="Index">Повернутися до списку замовлень</a>
 </div>
 
@@ -133,7 +133,7 @@
                 }
             </td>
             <td valign="middle">
-                @if(Model.Order.CreationTime is null)
+                @if(Model.Order.CreationTime is null && (string)TempData.Peek("Role")=="customer")
                 {
                     <form asp-action="Details">
                         <input type="hidden" asp-for="OrderItem.Id" value=@item.Id />
@@ -152,7 +152,7 @@
                                 </td>
                                 <td>&nbsp;шт.&nbsp;&nbsp;&nbsp;</td>
                             }
-                            <td><input type="submit" value="Зберегти" class="btn btn-primary" /></td>
+                            <td><input type="submit" value="Зберегти" class="btn btn-outline-primary" /></td>
                         </tr></table>
                     </form>
                 }
@@ -165,12 +165,12 @@
                 @Html.DisplayFor(modelItem => item.Cost)
             </td>
             <td valign="middle">
-                @if(Model.Order.CreationTime is null)
+                @if(Model.Order.CreationTime is null && (string)TempData.Peek("Role")=="customer")
                 {
                     <form asp-action="Details">
                         <input type="hidden" asp-for="OrderItem.Id" value=@item.Id />
                         <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
-                        <input type="submit" value="Видалити з замовлення" class="btn btn-danger" />
+                        <input type="submit" value="Видалити з замовлення" class="btn btn-outline-danger" />
                     </form>
                 }
             </td>

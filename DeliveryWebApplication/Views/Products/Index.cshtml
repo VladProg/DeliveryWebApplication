@@ -13,19 +13,19 @@
         <div class="row">
             <form asp-action="Index">
                 <div class="form-group">
-                    <label asp-for="TrademarkId" class="control-label"></label> (<a asp-action="Index" asp-controller="Trademarks">відкрити список</a>)
+                    <label asp-for="TrademarkId" class="control-label"></label> @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { <text>(<a asp-action="Index" asp-controller="Trademarks">відкрити список</a>)</text>}
                     <select asp-for="TrademarkId" class ="form-control" asp-items="ViewBag.TrademarkId"><option/></select>
                 </div>
                 <div class="form-group">
-                    <label asp-for="CategoryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Categories">відкрити список</a>)
+                    <label asp-for="CategoryId" class="control-label"></label> @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { <text>(<a asp-action="Index" asp-controller="Categories">відкрити список</a>)</text>}
                     <select asp-for="CategoryId" class ="form-control" asp-items="ViewBag.CategoryId"><option/></select>
                 </div>
                 <div class="form-group">
-                    <label asp-for="CountryId" class="control-label"></label> (<a asp-action="Index" asp-controller="Countries">відкрити список</a>)
+                    <label asp-for="CountryId" class="control-label"></label> @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { <text>(<a asp-action="Index" asp-controller="Countries">відкрити список</a>)</text>}
                     <select asp-for="CountryId" class ="form-control" asp-items="ViewBag.CountryId"><option/></select>
                 </div>
                 <div class="form-group">
-                    <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back="Products">відкрити список</a>)
+                    <label asp-for="ShopId" class="control-label"></label> @if((string)TempData.Peek("Role")=="admin") { <text>(<a asp-action="Index" asp-controller="Shops" asp-route-back="Products">відкрити список</a>)</text>}
                     <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
                 </div>
                 <br />
@@ -36,8 +36,9 @@
         </div>
     </td>
     <td style="padding:50px">
+        @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { 
         <div>
-            <h3>Додати продукти з файлу</h3>
+            <h3>Додати товари з файлу</h3>
             @using (Html.BeginForm("Import", "Products", FormMethod.Post, new { enctype = "multipart/form-data", id = "frm-excel" }))
             {
                 <div>
@@ -52,16 +53,17 @@
         </div>
         <hr />
         <div>
-            <h3>Зберегти продукти в файл</h3>
+            <h3>Зберегти товари в файл</h3>
             <a asp-action="Export" > Завантажити Excel-файл </a>
         </div>
+        }
     </td>
 </tr> </table>
 
 <hr />
 
 <p>
-    <a asp-action="Create">Створити новий товар</a>
+    @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop") { <a asp-action="Create">Створити новий товар</a>}
 </p>
 
 <hr />

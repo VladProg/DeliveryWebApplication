@@ -52,16 +52,16 @@
 <hr />
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Product.Id">Редагувати</a> |
-    @if(!Model.Product.HasAlive)
+    @if((string)TempData.Peek("Role")=="admin") { <a asp-action="Edit" asp-route-id="@Model.Product.Id">Редагувати</a> <text>|</text>}
+    @if(!Model.Product.HasAlive&&((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop"))
     {
         <a asp-action="Delete" asp-route-id="@Model.Product.Id">Видалити</a> <text> | </text>
     }
-    <a asp-action="Create" asp-controller="ProductsInShops" asp-route-productId="@Model.Product.Id" asp-route-productName="@Model.Product.Name" asp-route-isPerKg="@(Model.Product.Weight is null)">Додати в магазин</a> |
+    @if((string)TempData.Peek("Role")=="admin"||((string)TempData.Peek("Role")=="shop"&&!Model.Product.ProductsInShops.Alive().Any(pis=>pis.ShopId==ViewBag.UserShopId))) { <a asp-action="Create" asp-controller="ProductsInShops" asp-route-productId="@Model.Product.Id" asp-route-productName="@Model.Product.Name" asp-route-isPerKg="@(Model.Product.Weight is null)">Додати в магазин</a> <text>|</text>}
     <a asp-action="Index">Повернутися до списку товарів</a>
 </div>
 
-@if(Model.Product.HasAlive)
+@if(Model.Product.HasAlive&&((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop"))
 {
     <text> Щоб видалити товар, спочатку видаліть його з усіх магазинів. </text>
 }
@@ -99,60 +99,62 @@
                 @Html.DisplayFor(modelItem => item.FormattedPrice)
             </td>
             <td>
-                <a asp-action="Edit" asp-controller="ProductsInShops" asp-route-id="@item.Id">Змінити ціну</a> |
-                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазина</a>
-                @if(TempData.Peek("CustomerId") is not null and not 0 &&
+                @if((string)TempData.Peek("Role")=="admin"||(string)TempData.Peek("Role")=="shop"&&ViewBag.UserShopId==item.ShopId) { <a asp-action="Edit" asp-controller="ProductsInShops" asp-route-id="@item.Id">Змінити ціну</a> <text>|</text>
+                <a asp-action="Delete" asp-controller="ProductsInShops" asp-route-id="@item.Id">Видалити з магазину</a>}
+                @if(TempData.Peek("CustomerId") is not null and not 0 && (string)TempData.Peek("Role")=="customer" &&
                     !item.Shop.Orders.Any(o=>o.CustomerId==(int)TempData.Peek("CustomerId")&&o.CreationTime is not null&&o.DeliveryTime is null))
                 {
                     OrderItem oi = null;
-                    <form asp-action="Details">
-                        <input type="hidden" asp-for="OrderItem.ProductInShopId" value=@item.Id />
-                        @{
-                            <br />
-                            if(item.Shop.Orders.Where(o=>o.CustomerId==(int)TempData.Peek("CustomerId")&&o.CreationTime is null).FirstOrDefault() is Order o)
-                                oi = o.OrderItems.Where(oi=>oi.ProductInShopId==item.Id).FirstOrDefault() as OrderItem;
-                            if(oi is not null)
-                            {
-                                <text>Змінити в </text>
-                                <a asp-action="Details" asp-controller="Orders" asp-route-id="@oi.OrderId">замовленні</a>
-                            }
-                            else
-                            {
-                                <text>Додати до замовлення</text>
-                            }
-                            if(Model.Product.Weight is null)
-                            {
-                                <text> вагу (кг)</text>
-                                <br />
-                            }
-                            else
-                            {
-                                <text> кількість</text>
-                                <br />
-                            }
-                            <table><tr>
-                            <td width=100px>
-                            @if(Model.Product.Weight is null)
-                            {
-                                <input asp-for="OrderItem.Weight" class="form-control" onkeypress=@(@"return /[0-9.]/i.test(event.key)") value=@(oi is null ? "" : oi.Weight?.ToString("n3"))/>
-                            }
-                            else
-                            {
-                                <input asp-for="OrderItem.Count" class="form-control" onkeypress=@(@"return /[0-9]/i.test(event.key)") value=@(oi is null ? "" : oi.Count.ToString())/>
-                            }
-                            </td>
-                            <td><input type="submit" value="Зберегти" class="btn btn-primary" /></td>
-                            </tr></table>
-                        }
-                     </form>
+                    if(item.Shop.Orders.Where(o=>o.CustomerId==(int)TempData.Peek("CustomerId")&&o.CreationTime is null).FirstOrDefault() is Order o)
+                        oi = o.OrderItems.Where(oi=>oi.ProductInShopId==item.Id).FirstOrDefault() as OrderItem;
                     if(oi is not null)
                     {
+                        <text>Змінити в </text>
+                        <a asp-action="Details" asp-controller="Orders" asp-route-id="@oi.OrderId">замовленні</a>
+                    }
+                    else
+                    {
+                        <text>Додати до замовлення</text>
+                    }
+                    if(Model.Product.Weight is null)
+                    {
+                        <text> вагу (кг)</text>
+                        <br />
+                    }
+                    else
+                    {
+                        <text> кількість</text>
+                        <br />
+                    }
+                    <table><tr>
                         <form asp-action="Details">
                             <input type="hidden" asp-for="OrderItem.ProductInShopId" value=@item.Id />
-                            <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
-                            <input type="submit" value="Видалити з замовлення" class="btn btn-danger" />
+                            <td width=100px>
+                                @if(Model.Product.Weight is null)
+                                {
+                                    <input asp-for="OrderItem.Weight" class="form-control" onkeypress=@(@"return /[0-9.]/i.test(event.key)") value=@(oi is null ? "" : oi.Weight?.ToString("n3"))/>
+                                }
+                                else
+                                {
+                                    <input asp-for="OrderItem.Count" class="form-control" onkeypress=@(@"return /[0-9]/i.test(event.key)") value=@(oi is null ? "" : oi.Count.ToString())/>
+                                }
+                            </td>
+                            <td>
+                                <input type="submit" value="Зберегти" class="btn btn-outline-primary" />
+                            </td>
                         </form>
-                    }
+                        @if(oi is not null)
+                        {
+                            <td>
+                            <form asp-action="Details">
+                                <input type="hidden" asp-for="OrderItem.ProductInShopId" value=@item.Id />
+                                <input type="hidden" asp-for="OrderItem.Count" class="form-control" value=0/>
+                                <input type="submit" value="X" class="btn btn-outline-danger" title="Видалити товар з замовлення" />
+                            </form>
+                            </td>
+                        }
+                    </tr></table>
+                    
                 }
             </td>
         </tr>

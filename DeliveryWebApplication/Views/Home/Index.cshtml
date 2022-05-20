@@ -1,7 +1,130 @@
 ﻿@{
+    Layout = "";
     ViewData["Title"] = "Домашня сторінка";
 }
 
-<div class="text-center">
-    <a href="/Products"><img src="~/image.png" width=1200px /></a>
-</div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Доставка «EveryDay»</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/lumen.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DeliveryWebApplication.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <style>
+        tbody tr:hover
+        {
+            background: #f0f0f0;
+        }
+    </style>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index"> <img src="~/logo.png" height=30px /> </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav">
+                        @if(!ViewBag.IsAuthenticated || (string)TempData.Peek("Role")!="courier"){
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Товари</a>
+                        </li>
+                        }
+                        @if(ViewBag.IsAuthenticated&&(string)TempData.Peek("Role")!="none"){
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Orders" asp-action="Index">Замовлення</a>
+                        </li>}
+                        @if((string)TempData.Peek("Role")=="admin"){
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Roles" asp-action="Index">Користувачі</a>
+                        </li>}
+                    </ul>
+                    <ul class="navbar-nav" style="float:right">
+                        @if (ViewBag.IsAuthenticated)
+                        {
+                            if (!ViewBag.Roles.Contains("customer") || ViewBag.Roles.Contains("courier") || ViewBag.Roles.Contains("shop") || ViewBag.Roles.Contains("admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                        @if ((string)TempData.Peek("Role") == "none")
+                                        {
+                                            <text>Ваш акаунт заблоковано</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "customer")
+                                        {
+                                            <text>Клієнт</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "courier")
+                                        {
+                                            <text>Кур'єр</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "shop")
+                                        {
+                                            <text>Представник магазину</text>
+                                        }
+                                        else if ((string)TempData.Peek("Role") == "admin")
+                                        {
+                                            <text>Адмін</text>
+                                        }
+                                    </a>
+                                    <div class="dropdown-menu">
+                                        @if (ViewBag.Roles.Contains("customer"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Customer">Клієнт</a>
+                                        }
+                                        @if (ViewBag.Roles.Contains("courier"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Courier">Кур'єр</a>
+                                        }
+                                        @if (ViewBag.Roles.Contains("shop"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Shop">Представник магазину</a>
+                                        }
+                                        @if (ViewBag.Roles.Contains("admin"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Admin">Адмін</a>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                            <li class="nav-item dropdown" style="width:fit-content; min-width:225px">
+                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                                    @ViewBag.Name
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Edit">Редагувати дані про себе</a>
+                                    @if((string)TempData.Peek("Role")=="shop") { <a class="dropdown-item" asp-controller="Shops" asp-action="Edit" asp-route-id=@ViewBag.UserShopId>Редагувати дані про магазин</a> }
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Змінити пароль</a>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="Logout">Вихід</a>
+                                </div>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Вхід</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">Реєстація</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="text-center">
+        <a href=@((string)TempData.Peek("Role")!="courier"?"/Products":"")><img src="~/image.png" width=100% /></a>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

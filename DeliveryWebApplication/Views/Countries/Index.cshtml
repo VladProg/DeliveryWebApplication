@@ -7,10 +7,10 @@
 <h1>Країни</h1>
 
 <p>
-    <a asp-action="Create">Створити країну</a> |
+    @if((string)TempData.Peek("Role")=="admin") { <a asp-action="Create">Створити країну</a> <text>|</text> }
     <a asp-controller="Products" asp-action="Index">Повернутися до списку товарів</a>
 </p>
-*Щоб видалити країну, спочатку видаліть всі товари з неї.
+@if((string)TempData.Peek("Role")=="admin") { <text>*Щоб видалити країну, спочатку видаліть всі товари з неї.</text> }
 <br />
 <br />
 <table class="table">
@@ -35,11 +35,13 @@
                 @Html.DisplayFor(modelItem => item.CountAlive)
             </td>
             <td>
+                @if((string)TempData.Peek("Role")=="admin") { 
                 <a asp-action="Edit" asp-route-id="@item.Id">Редагувати</a>
                 @if(!item.HasAlive)
                 {
                     <text> | </text>
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
+                }
                 }
             </td>
         </tr>

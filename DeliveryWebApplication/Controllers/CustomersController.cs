@@ -8,123 +8,30 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class CustomersController : Controller
+    public class CustomersController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public CustomersController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public CustomersController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: Customers
         public async Task<IActionResult> Index()
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             return View(await _context.Customers.ToListAsync());
-        }
-
-        // GET: Customers/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var customer = await _context.Customers
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
-
-            return View(customer);
-        }
-
-        // GET: Customers/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Customers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Phone")] Customer customer)
-        {
-            if (_context.Customers.Any(s => s.Phone == customer.Phone))
-                ModelState.AddModelError("Phone", "Клієнт з таким номером телефона вже зареєестрований");
-            if (ModelState.IsValid)
-            {
-                _context.Add(customer);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(customer);
-        }
-
-        // GET: Customers/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
-            {
-                return NotFound();
-            }
-            return View(customer);
-        }
-
-        // POST: Customers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Phone")] Customer customer)
-        {
-            if (id != customer.Id)
-            {
-                return NotFound();
-            }
-
-            if (_context.Customers.Any(s => s.Phone == customer.Phone && s.Id != customer.Id))
-                ModelState.AddModelError("Phone", "Клієнт з таким номером телефона вже зареєестрований");
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(customer);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!CustomerExists(customer.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(customer);
         }
 
         // GET: Customers/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -145,6 +52,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             var customer = await _context.Customers.FindAsync(id);
             _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();

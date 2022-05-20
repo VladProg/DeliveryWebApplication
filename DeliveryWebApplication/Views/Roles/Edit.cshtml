@@ -1,0 +1,24 @@
+﻿@model DeliveryWebApplication.ViewModels.ChangeRoleViewModel
+
+<h3>Користувач</h3>
+<h4>Ім'я: <b>@Model.User.Name</b></h4>
+<h4>Телефон: <b>@Model.User.PhoneNumber</b></h4>
+<h4>E-mail: <b>@Model.User.Email</b></h4>
+<br />
+<hr />
+<br />
+<h3>Змінити ролі:</h3>
+<br />
+<form asp-action="Edit" class="col-md-4">
+    <input type="hidden" name="userId" value="@Model.User.Id" />
+    @Html.CheckBoxFor(model=>model.IsCustomer) <label for="IsCustomer">Клієнт</label> <br /> <br />
+    @Html.CheckBoxFor(model=>model.IsCourier) <label for="IsCourier">Кур'єр</label> <br /> <br />
+    <div class="form-group">
+        <label asp-for="ShopId" class="control-label"></label> (<a asp-action="Index" asp-controller="Shops" asp-route-back=@("Roles."+Model.User.Id)>відкрити список</a>)
+        <select asp-for="ShopId" class ="form-control" asp-items="ViewBag.ShopId"><option/></select>
+    </div> <br />
+    @Html.CheckBoxFor(model=>model.IsAdmin) <label for="IsAdmin">Адмін</label> <br /> <br />
+    <button type="submit" class="btn btn-primary">Зберегти</button>
+</form>
+ <br />
+<a asp-action="Index">Повернутися до списку користувачів</a>

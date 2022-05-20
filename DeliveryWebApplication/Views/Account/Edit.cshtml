@@ -1,0 +1,23 @@
+﻿@model DeliveryWebApplication.ViewModels.EditAccountViewModel
+<h2>Редагувати дані про себе</h2>
+<form method="post" asp-controller="Account" asp-action="Edit" class="col-md-5">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div>
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Phone"></label><br />
+        <input asp-for="Phone" class="form-control" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Email"></label><br /> (якщо ви зміните E-mail, то доведеться ще раз авторизуватися)<br />
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div>
+        <input type="submit" value="Зберегти" class="btn btn-primary" />
+    </div>
+</form>

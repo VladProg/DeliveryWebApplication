@@ -8,26 +8,34 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class ProductsInShopsController : Controller
+    public class ProductsInShopsController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public ProductsInShopsController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public ProductsInShopsController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: ProductsInShops/Create
         public IActionResult Create(int productId, string productName, bool isPerKg)
         {
+            if (!CheckRoles(ADMIN|SHOP)) return Forbid();
             ViewData["ProductId"] = productId;
             ViewData["ProductName"] = productName;
             ViewData["IsPerKg"] = isPerKg;
-            ViewData["ShopId"] = new SelectList(_context.Shops.Alive().Where(s => !s.ProductsInShops.Any(pis => pis.ProductId == productId && !pis.Deleted)), "Id", "Name", TempData["ShopId"]);
+            var shops = _context.Shops.Alive().Where(s => !s.ProductsInShops.Any(pis => pis.ProductId == productId && !pis.Deleted));
+            if((string)TempData.Peek("Role") == "admin")
+                ViewData["ShopId"] = new SelectList(shops, "Id", "Name", TempData["ShopId"]);
+            else
+            {
+                int id = ViewBag.UserShopId;
+                ViewData["ShopId"] = new SelectList(shops.Where(s => s.Id == id), "Id", "Name");
+            }
             TempData.Keep();
             return View();
         }
@@ -39,6 +47,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,ProductId,ShopId,Price")] ProductInShop productInShop)
         {
+            if (!CheckRoles(ADMIN,SHOP:productInShop.ShopId)) return Forbid();
             if (ModelState.IsValid)
             {
                 _context.Add(productInShop);
@@ -66,7 +75,8 @@ namespace DeliveryWebApplication.Controllers
             {
                 return NotFound();
             }
-            
+            if (!CheckRoles(ADMIN, SHOP: productInShop.ShopId)) return Forbid();
+
             ViewData["ProductName"] = productInShop.Product.Name;
             ViewData["IsPerKg"] = productInShop.Product.Weight is null;
             ViewData["ShopNameWithAddress"] = productInShop.Shop.NameWithAddress;
@@ -80,6 +90,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,ProductId,ShopId,Price")] ProductInShop productInShop)
         {
+            if (!CheckRoles(ADMIN, SHOP: productInShop.ShopId)) return Forbid();
             if (id != productInShop.Id)
             {
                 return NotFound();
@@ -131,6 +142,7 @@ namespace DeliveryWebApplication.Controllers
             {
                 return NotFound();
             }
+            if (!CheckRoles(ADMIN, SHOP: productInShop.ShopId)) return Forbid();
 
             ViewData["ProductName"] = productInShop.Product.Name;
             ViewData["ShopNameWithAddress"] = productInShop.Shop.NameWithAddress;
@@ -143,6 +155,7 @@ namespace DeliveryWebApplication.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var productInShop = await _context.ProductsInShops.FindAsync(id);
+            if (!CheckRoles(ADMIN, SHOP: productInShop.ShopId)) return Forbid();
             productInShop.Deleted = true;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(ProductsController.Details), "Products", new { id = productInShop.ProductId });

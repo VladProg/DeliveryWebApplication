@@ -8,28 +8,30 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DeliveryWebApplication;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryWebApplication.Controllers
 {
-    public class CountriesController : Controller
+    public class CountriesController : MyController
     {
         private readonly DeliveryContext _context;
 
-        public CountriesController(DeliveryContext context)
-        {
-            _context = context;
-            Utils.SetCulture();
-        }
+        public CountriesController(DeliveryContext context, UserManager<User> userManager)
+            : base(userManager)
+            => _context = context;
 
         // GET: Countries
         public async Task<IActionResult> Index()
         {
+            if (!CheckRoles(ADMIN|SHOP)) return Forbid();
             return View(await _context.Countries.Alive().Include(t => t.Products).ToListAsync());
         }
 
         // GET: Countries/Create
         public IActionResult Create()
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             return View();
         }
 
@@ -40,6 +42,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Country country)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (_context.Countries.Alive().Any(c => c.Name == country.Name))
                 ModelState.AddModelError("Name", "Така країна вже існує");
             if (ModelState.IsValid)
@@ -54,6 +57,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Countries/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -74,6 +78,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Country country)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id != country.Id || country.Deleted)
             {
                 return NotFound();
@@ -107,6 +112,7 @@ namespace DeliveryWebApplication.Controllers
         // GET: Countries/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             if (id == null)
             {
                 return NotFound();
@@ -128,6 +134,7 @@ namespace DeliveryWebApplication.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (!CheckRoles(ADMIN)) return Forbid();
             var country = await _context.Countries.FindAsync(id);
             country.Deleted = true;
             await _context.SaveChangesAsync();

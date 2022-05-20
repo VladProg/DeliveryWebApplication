@@ -16,6 +16,10 @@
     {
         <text>|</text> <a asp-controller="Orders" asp-action="Index">Повернутися до списку замовлень</a>
     }
+    else if(((string)ViewData["Back"]).StartsWith("Roles."))
+    {
+        <text>|</text> <a asp-controller="Roles" asp-action="Edit" asp-route-userid=@(((string)ViewData["Back"])[6..])>Повернутися до редагування прав користувача</a>
+    }
 </p>
 *Щоб видалити магазин, спочатку видаліть всі товари з нього.
 <br />
